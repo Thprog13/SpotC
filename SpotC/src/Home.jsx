@@ -5,6 +5,7 @@ import {
   Marker,
   Popup,
   Polyline,
+  Tooltip,
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
@@ -35,80 +36,96 @@ const createCustomIcon = (color, iconName, pulse = false) => {
   });
 };
 
+// Simple white dot for stations
+const stationIcon = L.divIcon({
+  className: "custom-station-icon",
+  html: `<div class="station-dot"></div>`,
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
+});
+
 const policeIcon = createCustomIcon("#4285F4", "local_police", true);
 const hazardIcon = createCustomIcon("#F59E0B", "warning");
 const delayIcon = createCustomIcon("#EF4444", "schedule");
 const userIcon = createCustomIcon("#3B82F6", "navigation");
 
-// --- STM METRO LINES DATA (Coordinates & Colors) ---
+// --- DATA: LINES & KEY STATIONS ---
 const stmLines = [
   {
-    name: "Green Line",
-    color: "#009739", // Official STM Green
+    color: "#009739", // Green
     positions: [
-      [45.4461, -73.6036], // Angrignon
-      [45.4578, -73.5821], // De l'Église
-      [45.48, -73.5796], // Lionel-Groulx
-      [45.4897, -73.5821], // Atwater
-      [45.495, -73.5788], // Guy-Concordia
-      [45.5032, -73.5695], // McGill
-      [45.5078, -73.5627], // Place-des-Arts
-      [45.5152, -73.5611], // Berri-UQAM
-      [45.525, -73.5532], // Papineau
-      [45.5416, -73.5434], // Joliette
-      [45.5583, -73.5356], // Pie-IX
-      [45.5891, -73.5117], // Honoré-Beaugrand
+      [45.4461, -73.6036],
+      [45.4578, -73.5821],
+      [45.48, -73.5796],
+      [45.4897, -73.5821],
+      [45.495, -73.5788],
+      [45.5032, -73.5695],
+      [45.5078, -73.5627],
+      [45.5152, -73.5611],
+      [45.525, -73.5532],
+      [45.5416, -73.5434],
+      [45.5583, -73.5356],
+      [45.5891, -73.5117],
     ],
   },
   {
-    name: "Orange Line",
-    color: "#E87722", // Official STM Orange
+    color: "#E87722", // Orange
     positions: [
-      [45.5143, -73.6826], // Côte-Vertu
-      [45.4947, -73.6559], // Namur
-      [45.4856, -73.6284], // Snowdon
-      [45.4779, -73.6074], // Villa-Maria
-      [45.4727, -73.588], // Place-Saint-Henri
-      [45.48, -73.5796], // Lionel-Groulx
-      [45.4925, -73.5606], // Lucien-L'Allier
-      [45.4983, -73.5574], // Bonaventure
-      [45.5034, -73.56], // Square-Victoria-OACI
-      [45.5152, -73.5611], // Berri-UQAM
-      [45.5242, -73.5815], // Mont-Royal
-      [45.5317, -73.5996], // Laurier
-      [45.5359, -73.6186], // Rosemont
-      [45.5478, -73.6291], // Jean-Talon
-      [45.5604, -73.6565], // Crémazie
-      [45.5562, -73.7214], // Montmorency
+      [45.5143, -73.6826],
+      [45.4947, -73.6559],
+      [45.4856, -73.6284],
+      [45.4779, -73.6074],
+      [45.4727, -73.588],
+      [45.48, -73.5796],
+      [45.4925, -73.5606],
+      [45.4983, -73.5574],
+      [45.5034, -73.56],
+      [45.5152, -73.5611],
+      [45.5242, -73.5815],
+      [45.5317, -73.5996],
+      [45.5359, -73.6186],
+      [45.5478, -73.6291],
+      [45.5604, -73.6565],
+      [45.5562, -73.7214],
     ],
   },
   {
-    name: "Yellow Line",
-    color: "#FFCD00", // Official STM Yellow
+    color: "#FFCD00", // Yellow
     positions: [
-      [45.5152, -73.5611], // Berri-UQAM
-      [45.509, -73.5332], // Jean-Drapeau
-      [45.524, -73.5218], // Longueuil
+      [45.5152, -73.5611],
+      [45.509, -73.5332],
+      [45.524, -73.5218],
     ],
   },
   {
-    name: "Blue Line",
-    color: "#005EB8", // Official STM Blue
+    color: "#005EB8", // Blue
     positions: [
-      [45.4856, -73.6284], // Snowdon
-      [45.5024, -73.6234], // Université-de-Montréal
-      [45.5145, -73.6125], // Outremont
-      [45.528, -73.612], // Acadie
-      [45.5478, -73.6291], // Jean-Talon
-      [45.5539, -73.6133], // Fabre
-      [45.5583, -73.5985], // Saint-Michel
+      [45.4856, -73.6284],
+      [45.5024, -73.6234],
+      [45.5145, -73.6125],
+      [45.528, -73.612],
+      [45.5478, -73.6291],
+      [45.5539, -73.6133],
+      [45.5583, -73.5985],
     ],
   },
 ];
 
-// --- SUB-COMPONENTS ---
+// Key stations: Terminuses + Intersections
+const keyStations = [
+  { name: "Angrignon", pos: [45.4461, -73.6036], align: "bottom" },
+  { name: "Honoré-Beaugrand", pos: [45.5891, -73.5117], align: "top" },
+  { name: "Côte-Vertu", pos: [45.5143, -73.6826], align: "left" },
+  { name: "Montmorency", pos: [45.5562, -73.7214], align: "right" },
+  { name: "Longueuil", pos: [45.524, -73.5218], align: "right" },
+  { name: "Saint-Michel", pos: [45.5583, -73.5985], align: "right" },
+  { name: "Snowdon", pos: [45.4856, -73.6284], align: "left" },
+  { name: "Jean-Talon", pos: [45.5478, -73.6291], align: "top" },
+  { name: "Lionel-Groulx", pos: [45.48, -73.5796], align: "bottom" },
+  { name: "Berri-UQAM", pos: [45.5152, -73.5611], align: "right" },
+];
 
-// 1. Map Controller for Buttons
+// --- SUB-COMPONENTS ---
 function MapController({
   zoomInTrigger,
   zoomOutTrigger,
@@ -128,13 +145,11 @@ function MapController({
   return null;
 }
 
-// 2. Report Modal
 function ReportModal({ onClose }) {
   const handleReport = (type) => {
     alert(`Signalement envoyé: ${type}`);
-    onClose(); // Close modal after reporting
+    onClose();
   };
-
   return (
     <div className="modal-overlay">
       <div className="report-modal animate-slide-up">
@@ -143,7 +158,6 @@ function ReportModal({ onClose }) {
         <p className="modal-subtitle">
           Help other commuters by reporting transit issues
         </p>
-
         <button
           className="report-option-btn"
           onClick={() => handleReport("Retard")}
@@ -156,7 +170,6 @@ function ReportModal({ onClose }) {
             <p>Train/Bus running late</p>
           </div>
         </button>
-
         <button
           className="report-option-btn"
           onClick={() => handleReport("Danger")}
@@ -169,7 +182,6 @@ function ReportModal({ onClose }) {
             <p>Elevator/escalator issue</p>
           </div>
         </button>
-
         <button
           className="report-option-btn"
           onClick={() => handleReport("Contrôleurs")}
@@ -182,7 +194,6 @@ function ReportModal({ onClose }) {
             <p>Ticket inspectors at station</p>
           </div>
         </button>
-
         <button className="cancel-btn" onClick={onClose}>
           Cancel
         </button>
@@ -191,7 +202,6 @@ function ReportModal({ onClose }) {
   );
 }
 
-// 3. Signalements List
 function SignalementsList({ onClose }) {
   const reports = [
     {
@@ -228,7 +238,6 @@ function SignalementsList({ onClose }) {
       icon: "schedule",
     },
   ];
-
   return (
     <div className="signalements-container animate-fade-in">
       <div className="signalements-header">
@@ -279,10 +288,8 @@ function SignalementsList({ onClose }) {
 
 // --- MAIN COMPONENT ---
 function Home() {
-  const [view, setView] = useState("map"); // 'map', 'report', 'signalements'
+  const [view, setView] = useState("map");
   const [sheetVisible, setSheetVisible] = useState(true);
-
-  // Map Control Triggers
   const [zoomInTick, setZoomInTick] = useState(0);
   const [zoomOutTick, setZoomOutTick] = useState(0);
   const [centerTick, setCenterTick] = useState(0);
@@ -292,7 +299,6 @@ function Home() {
 
   return (
     <div className="home-container">
-      {/* 1. MAP & CONTROLS */}
       {view === "map" && (
         <>
           <header className="app-header animate-slide-down">
@@ -304,8 +310,7 @@ function Home() {
               className="btn-signalements"
               onClick={() => setView("signalements")}
             >
-              <span className="material-icons">list</span>
-              Signalements
+              <span className="material-icons">list</span> Signalements
             </button>
           </header>
 
@@ -325,7 +330,7 @@ function Home() {
           <div className="map-wrapper">
             <MapContainer
               center={mtlPosition}
-              zoom={13}
+              zoom={12}
               zoomControl={false}
               style={{ height: "100%", width: "100%" }}
             >
@@ -335,14 +340,12 @@ function Home() {
                 centerTrigger={centerTick}
                 centerPos={mtlPosition}
               />
-
-              {/* CartoDB Tiles */}
               <TileLayer
                 attribution="&copy; CARTO"
                 url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
               />
 
-              {/* DRAW STM LINES */}
+              {/* DRAW LINES */}
               {stmLines.map((line, idx) => (
                 <Polyline
                   key={idx}
@@ -351,7 +354,22 @@ function Home() {
                 />
               ))}
 
-              {/* Markers */}
+              {/* DRAW KEY STATIONS */}
+              {keyStations.map((station, idx) => (
+                <Marker key={idx} position={station.pos} icon={stationIcon}>
+                  <Tooltip
+                    direction={station.align}
+                    offset={[0, 0]}
+                    opacity={1}
+                    permanent
+                    className="station-label"
+                  >
+                    {station.name}
+                  </Tooltip>
+                </Marker>
+              ))}
+
+              {/* Dynamic Markers */}
               <Marker position={berriUqam} icon={policeIcon}>
                 <Popup>Contrôleurs à Berri-UQAM</Popup>
               </Marker>
@@ -388,7 +406,6 @@ function Home() {
             </button>
           </div>
 
-          {/* BOTTOM SHEET */}
           {sheetVisible && (
             <div className="bottom-sheet animate-slide-up-slow">
               <div className="sheet-handle"></div>
@@ -400,7 +417,6 @@ function Home() {
                     14:45
                   </div>
                 </div>
-                {/* Close Button now works */}
                 <span
                   className="material-icons close-icon"
                   onClick={() => setSheetVisible(false)}
@@ -408,7 +424,6 @@ function Home() {
                   close
                 </span>
               </div>
-
               <div className="route-card active">
                 <div className="route-header">
                   <span className="material-icons blue-text">alt_route</span>
@@ -421,7 +436,6 @@ function Home() {
                   <span>• 1 transfer</span>
                 </div>
               </div>
-
               <button
                 className="start-btn"
                 onClick={() => alert("Navigation started!")}
@@ -433,7 +447,6 @@ function Home() {
         </>
       )}
 
-      {/* 2. OVERLAYS */}
       {view === "report" && <ReportModal onClose={() => setView("map")} />}
       {view === "signalements" && (
         <SignalementsList onClose={() => setView("map")} />
