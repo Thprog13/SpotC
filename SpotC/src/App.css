@@ -1,215 +1,144 @@
 /* --- GLOBAL & RESETS --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body { font-family: 'Inter', sans-serif; overflow: hidden; color: #1F2937; background: #f3f4f6; }
+body { font-family: 'Inter', sans-serif; overflow: hidden; color: white; background: #1a1a1a; }
 
-/* --- MAP MARKERS --- */
+/* --- MAP STYLES (Dark Mode) --- */
+.map-wrapper { height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; z-index: 1; background: #222; }
+
+/* Markers & Dots */
 .marker-pin {
-  width: 40px; height: 40px; border-radius: 50%;
-  border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-  display: flex; justify-content: center; align-items: center; color: white;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  display: flex; justify-content: center; align-items: center; color: white; font-weight: bold;
 }
-.marker-pin.pulse { animation: markerPulse 2s infinite; }
-@keyframes markerPulse {
-  0% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); }
-  70% { box-shadow: 0 0 0 15px rgba(66, 133, 244, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0); }
+.station-dot {
+  background: white; border: 3px solid #222; width: 14px; height: 14px; border-radius: 50%;
+  box-shadow: 0 0 0 1px white;
+}
+.leaflet-tooltip.station-label {
+  background: transparent !important; border: none !important; box-shadow: none !important;
+  font-family: 'Inter', sans-serif; font-weight: 700; font-size: 11px; color: white;
+  text-shadow: 0px 0px 4px #000;
+}
+.leaflet-tooltip.station-label::before { display: none !important; }
+
+/* --- UI OVERLAY --- */
+.ui-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 1000; pointer-events: none;
+  display: flex; flex-direction: column; justify-content: space-between;
 }
 
-/* --- HOME CONTAINER --- */
-.home-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; position: relative; }
+/* --- HEADER AREA --- */
+.header-area {
+  pointer-events: auto;
+  margin: 50px 15px 0;
+  display: flex; align-items: center; gap: 10px;
+}
 
-/* --- HEADER --- */
-.app-header {
-  position: absolute; top: 15px; left: 15px; right: 15px;
-  background: white; padding: 12px 16px; border-radius: 16px;
+.location-bar {
+  flex: 1;
+  background: linear-gradient(90deg, #8B5CF6 0%, #D946EF 100%);
+  border-radius: 30px; padding: 12px 20px;
   display: flex; align-items: center; justify-content: space-between;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08); z-index: 1000;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  color: white; font-weight: 600; cursor: pointer;
 }
-.app-header h1 { font-size: 1.1rem; font-weight: 700; color: #111; }
-.icon-btn { background: none; border: none; cursor: pointer; color: #333; display: flex; }
+.search-text { display: flex; flex-direction: column; }
+.search-label { font-size: 0.65rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; }
+.search-value { font-size: 0.95rem; }
+.nav-icon { background: rgba(255,255,255,0.2); padding: 6px; border-radius: 50%; }
+
+/* Signalements Button (Top Right) */
 .btn-signalements {
-  background: #2563EB; color: white; border: none; padding: 8px 14px;
-  border-radius: 20px; font-size: 0.85rem; font-weight: 600;
-  display: flex; align-items: center; gap: 6px; cursor: pointer;
-  transition: background 0.2s;
-}
-.btn-signalements:active { transform: scale(0.98); }
-
-/* --- MAP WRAPPER --- */
-.map-wrapper { height: 100%; width: 100%; z-index: 1; }
-
-/* --- NAV CARD (Top) --- */
-.nav-instruction-card {
-  position: absolute; top: 90px; left: 15px; right: 15px;
-  background: white; padding: 16px; border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08); z-index: 999;
-  display: flex; align-items: center; gap: 14px;
-}
-.nav-icon-box {
-  background: #3B82F6; min-width: 44px; height: 44px; border-radius: 12px;
-  display: flex; justify-content: center; align-items: center; color: white;
-}
-.nav-text h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
-.nav-text p { font-size: 0.8rem; color: #6B7280; line-height: 1.3; }
-.nav-arrow { margin-left: auto; color: #3B82F6; }
-
-/* --- FAB BUTTONS (Right) --- */
-.fab-controls {
-  position: absolute; bottom: 340px; right: 15px;
-  display: flex; flex-direction: column; gap: 12px; z-index: 999;
-}
-.fab-btn {
-  width: 48px; height: 48px; border-radius: 50%; background: white;
-  border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  background: #374151; color: white; border: 1px solid #4B5563;
+  width: 48px; height: 48px; border-radius: 50%;
   display: flex; justify-content: center; align-items: center;
-  cursor: pointer; color: #4B5563; transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer;
 }
-.fab-btn:active { background: #f9fafb; transform: scale(0.95); }
-.fab-btn.primary { background: #2563EB; color: white; border: none; }
-.pulse-shadow { animation: pulseShadow 2s infinite; }
-@keyframes pulseShadow {
-  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+.notification-badge {
+  position: absolute; top: 0; right: 0; width: 12px; height: 12px;
+  background: #EF4444; border-radius: 50%; border: 2px solid #1a1a1a;
 }
 
-/* --- BOTTOM SHEET --- */
-.bottom-sheet {
-  position: absolute; bottom: 0; left: 0; width: 100%;
-  background: white; border-radius: 24px 24px 0 0;
-  box-shadow: 0 -8px 30px rgba(0,0,0,0.12); z-index: 1000;
-  padding: 24px; padding-bottom: 30px;
+/* --- BOTTOM LIST (Main Menu) --- */
+.nearby-lines-container {
+  pointer-events: auto;
+  background: linear-gradient(to top, #111 85%, transparent 100%);
+  padding: 40px 15px 30px;
+  display: flex; flex-direction: column; gap: 10px;
 }
-.sheet-handle { width: 48px; height: 5px; background: #E5E7EB; border-radius: 10px; margin: 0 auto 20px; }
-.sheet-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-.sheet-header h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
-.arrival-time { color: #6B7280; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; }
-.close-icon { color: #9CA3AF; cursor: pointer; }
+.line-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; cursor: pointer; }
+.line-info { display: flex; align-items: center; gap: 15px; }
+.line-number { font-size: 2.5rem; font-weight: 800; line-height: 1; width: 60px; text-align: right; }
+.line-details { display: flex; flex-direction: column; }
+.line-direction { font-weight: 700; font-size: 1.1rem; }
+.line-stop { font-size: 0.85rem; color: #9CA3AF; }
+.line-eta { text-align: center; }
+.eta-number { font-size: 1.8rem; font-weight: 700; color: #3B82F6; display: block; line-height: 1; }
+.eta-unit { font-size: 0.7rem; color: #9CA3AF; }
+.color-blue { color: #3B82F6; } .color-pink { color: #EC4899; } .color-green { color: #10B981; }
 
-/* Routes List */
-.route-card {
-  border: 1px solid #F3F4F6; border-radius: 16px; padding: 16px;
-  margin-bottom: 12px; transition: all 0.2s;
+/* --- REPORT FAB (Bottom Right) --- */
+.fab-report {
+  position: absolute; bottom: 350px; right: 20px; pointer-events: auto; z-index: 1001;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #EF4444; color: white; border: none;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+  display: flex; justify-content: center; align-items: center;
+  font-size: 24px; cursor: pointer; transition: transform 0.2s;
 }
-.route-card.active { border-color: #BFDBFE; background: #EFF6FF; }
-.route-header { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; }
-.route-details { display: flex; gap: 12px; font-size: 0.85rem; color: #6B7280; margin-left: 34px; align-items: center; }
-.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
-.badge.green { background: #DCFCE7; color: #166534; }
-.status-text { font-weight: 600; margin-left: auto; }
-.status-text.green { color: #16A34A; }
-.status-text.orange { color: #D97706; }
-.blue-text { color: #2563EB; }
+.fab-report:active { transform: scale(0.95); }
 
-.start-btn {
-  width: 100%; background: #2563EB; color: white; border: none;
-  padding: 16px; border-radius: 14px; font-weight: 600; font-size: 1rem;
-  margin-top: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-
-/* --- REPORT MODAL --- */
+/* --- REPORT MODAL (Bottom Sheet) --- */
 .modal-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.4); z-index: 2000;
+  background: rgba(0,0,0,0.6); z-index: 2000; pointer-events: auto;
   display: flex; align-items: flex-end;
 }
 .report-modal {
-  background: white; width: 100%; border-radius: 24px 24px 0 0; padding: 24px;
+  background: #1F2937; width: 100%; border-radius: 24px 24px 0 0; padding: 24px;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.modal-subtitle { color: #6B7280; margin-bottom: 20px; font-size: 0.9rem; }
-.report-option-btn {
-  width: 100%; background: white; border: 1px solid #E5E7EB;
-  border-radius: 16px; padding: 16px; margin-bottom: 12px;
-  display: flex; align-items: center; gap: 16px; cursor: pointer;
-  text-align: left; transition: background 0.1s;
-}
-.report-option-btn:active { background: #F9FAFB; }
-.option-text h4 { font-weight: 600; margin-bottom: 2px; }
-.option-text p { font-size: 0.85rem; color: #6B7280; }
-.icon-circle { width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; flex-shrink: 0; }
-.icon-circle.red { background: #EF4444; }
-.icon-circle.orange { background: #F59E0B; }
-.icon-circle.blue { background: #3B82F6; }
-.cancel-btn {
-  width: 100%; background: #F3F4F6; color: #374151; border: none;
-  padding: 16px; border-radius: 14px; font-weight: 600; margin-top: 10px; cursor: pointer;
-}
+.modal-handle { width: 40px; height: 5px; background: #4B5563; border-radius: 10px; margin: 0 auto 20px; }
+.report-modal h3 { margin-bottom: 5px; font-size: 1.2rem; }
+.modal-subtitle { color: #9CA3AF; margin-bottom: 20px; font-size: 0.9rem; }
 
-/* --- SIGNALEMENTS LIST --- */
-.signalements-container {
+.report-btn-grid { display: flex; flex-direction: column; gap: 10px; }
+.report-option {
+  background: #374151; padding: 15px; border-radius: 16px; border: 1px solid #4B5563;
+  display: flex; align-items: center; gap: 15px; cursor: pointer; text-align: left; color: white;
+}
+.icon-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; }
+.bg-red { background: rgba(239, 68, 68, 0.2); color: #EF4444; }
+.bg-orange { background: rgba(249, 115, 22, 0.2); color: #F97316; }
+.bg-blue { background: rgba(59, 130, 246, 0.2); color: #3B82F6; }
+
+/* --- SIGNALEMENTS LIST OVERLAY --- */
+.signalements-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: white; z-index: 2000; display: flex; flex-direction: column;
+  background: #111; z-index: 2000; pointer-events: auto;
+  display: flex; flex-direction: column; animation: slideUp 0.3s;
 }
-.signalements-header {
-  padding: 16px; display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px solid #F3F4F6;
+.sig-header {
+  padding: 20px; display: flex; align-items: center; gap: 15px;
+  border-bottom: 1px solid #333;
 }
-.signalements-header button { background: none; border: none; cursor: pointer; }
-.signalements-header h2 { font-size: 1.1rem; }
-.filter-chips { padding: 16px; display: flex; gap: 8px; overflow-x: auto; }
-.chip {
-  padding: 8px 16px; background: #F3F4F6; border-radius: 20px;
-  font-size: 0.85rem; font-weight: 500; white-space: nowrap; color: #4B5563;
+.back-btn { background: none; border: none; color: white; cursor: pointer; }
+.sig-list { padding: 15px; overflow-y: auto; }
+.sig-card {
+  background: #1F2937; padding: 15px; border-radius: 16px; margin-bottom: 12px;
+  display: flex; gap: 15px; border: 1px solid #374151;
 }
-.chip.active { background: #10B981; color: white; } /* Using the specific green from mockup */
-.reports-scroll { flex: 1; overflow-y: auto; padding: 16px; background: #FAFAFA; }
-.report-card {
-  background: white; padding: 16px; border-radius: 16px; margin-bottom: 12px;
-  display: flex; gap: 16px; border: 1px solid #F3F4F6;
-}
-.report-icon {
-  width: 48px; height: 48px; border-radius: 50%; display: flex; justify-content: center; align-items: center; flex-shrink: 0;
-}
-.report-tags { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
-.tag { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
-.line-tag.green { background: #10B981; color: white; }
-.line-tag.orange { background: #F97316; color: white; }
-.time { font-size: 0.75rem; color: #9CA3AF; margin-left: auto; }
-.user-credit { font-size: 0.75rem; color: #9CA3AF; display: block; margin-top: 8px; }
-
-/* --- ANIMATIONS --- */
-.animate-slide-up { animation: slideUp 0.3s ease-out; }
-.animate-slide-up-slow { animation: slideUp 0.5s ease-out; }
-.animate-slide-down { animation: slideDown 0.5s ease-out; }
-.animate-fade-in { animation: fadeIn 0.2s ease-out; }
-/* --- MAP MARKERS --- */
-.marker-pin {
-  width: 40px; height: 40px; border-radius: 50%;
-  border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-  display: flex; justify-content: center; align-items: center; color: white;
-}
-.marker-pin.pulse { animation: markerPulse 2s infinite; }
-
-/* NEW: Station Dots */
-.station-dot {
-  background: white;
-  border: 2px solid #374151; /* Dark grey border */
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+.sig-content h4 { font-size: 1rem; margin-bottom: 4px; }
+.sig-content p { color: #9CA3AF; font-size: 0.85rem; margin-bottom: 8px; }
+.sig-tag {
+  font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; font-weight: 600;
+  background: rgba(16, 185, 129, 0.2); color: #10B981; display: inline-block;
 }
 
-/* NEW: Clean Station Labels */
-.station-label {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 11px;
-  color: #111;
-  text-shadow: 
-    -1px -1px 0 #fff,  
-     1px -1px 0 #fff,
-    -1px  1px 0 #fff,
-     1px  1px 0 #fff; /* White outline effect */
-  margin-top: -2px;
-}
-.station-label::before { display: none; } /* Hide tooltip arrow */
-
+/* Animations */
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-@keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
