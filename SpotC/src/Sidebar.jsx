@@ -12,7 +12,7 @@ const Sidebar = () => {
         
         {/* Icône Étoile -> Liste Métro */}
         <Link to="/metro" style={styles.link}>
-          <div style={styles.iconWrapper}>⭐</div>
+          <div style={styles.iconWrapper}>🚇</div>
         </Link>
         
         <Link to="/bus" style={styles.link}>
