@@ -20,3 +20,21 @@ export const metroLines = [
     stations: ["Berri-UQAM", "Jean-Drapeau", "Longueuil-Université-de-Sherbrooke"]
   }
 ];
+
+export const metroDetails = {
+  "Berri-UQAM": {
+    history: "Inaugurée en 1966, c'est la station la plus fréquentée du réseau. Elle rend hommage à l'UQAM et à la rue Berri.",
+    nearby: ["UQAM", "Grande Bibliothèque", "Gare d'autocars de Montréal", "CHUM"],
+    bus: ["15", "30", "125", "427", "715", "747"],
+    signalements: [
+      { type: "Police", desc: "Agents à la sortie St-Denis", time: "5 min" },
+      { type: "Travaux", desc: "Ascenseur en panne", time: "20 min" }
+    ]
+  },
+  "McGill": {
+    history: "Située au cœur du centre-ville, elle dessert le quartier des spectacles et les grands magasins.",
+    nearby: ["Université McGill", "Centre Eaton", "Place Montréal Trust"],
+    bus: ["15", "61", "125", "168"],
+    signalements: []
+  }
+};
