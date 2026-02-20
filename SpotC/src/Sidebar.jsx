@@ -1,18 +1,25 @@
 import React from "react";
+import { Link } from "react-router-dom"; 
 
 const Sidebar = () => {
   return (
     <div style={styles.sidebar}>
-      {/* Icône du haut (Home/Logo) */}
       <div style={styles.topIcons}>
-        <div style={styles.iconWrapper}>
-          <span style={styles.homeIcon}>🏠</span>
-        </div>
-        <div style={styles.iconWrapper}>⭐</div>
-        <div style={styles.iconWrapper}>💼</div>
+        {/* Icône Home */}
+        <Link to="/home" style={styles.link}>
+          <div style={styles.iconWrapper}>🏠</div>
+        </Link>
+        
+        {/* Icône Étoile -> Liste Métro */}
+        <Link to="/metro" style={styles.link}>
+          <div style={styles.iconWrapper}>⭐</div>
+        </Link>
+        
+        <Link to="/bus" style={styles.link}>
+          <div style={styles.iconWrapper}>🚌</div>
+        </Link>
       </div>
 
-      {/* Icônes de réseaux sociaux en bas */}
       <div style={styles.bottomIcons}>
         <div style={{ ...styles.iconWrapper, backgroundColor: "#E1306C" }}>
           <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Insta" style={styles.imgIcon} />
@@ -42,12 +49,12 @@ const styles = {
     left: 0,
     top: 0,
     boxShadow: "2px 0 5px rgba(0,0,0,0.2)",
+    zIndex: 1000,
   },
   topIcons: {
     display: "flex",
     flexDirection: "column",
     gap: "20px",
-    color: "#ccc",
   },
   bottomIcons: {
     display: "flex",
@@ -64,12 +71,17 @@ const styles = {
     cursor: "pointer",
     fontSize: "20px",
     transition: "0.3s",
+    color: "#ccc",
   },
   imgIcon: {
     width: "24px",
     height: "24px",
     filter: "brightness(0) invert(1)",
   },
+  link: {
+    textDecoration: "none",
+    color: "inherit",
+  }
 };
 
 export default Sidebar;

@@ -32,12 +32,12 @@ const createIcon = (color, iconName, size = 36) =>
     iconAnchor: [size / 2, size / 2],
   });
 
-const stationDotIcon = L.divIcon({
-  className: "station-div",
-  html: `<div class="station-dot"></div>`,
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
-});
+//const stationDotIcon = L.divIcon({
+//  className: "station-div",
+//  html: `<div class="station-dot"></div>`,
+//  iconSize: [14, 14],
+//  iconAnchor: [7, 7],
+//});
 
 // --- DATA ---
 const stmLines = [
