@@ -1,70 +1,67 @@
 import React, { useState } from 'react';
-import './App.css';
+import './Login.css';
 
-function App() {
+function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // C'est ici que tu feras l'appel à ton backend Node.js/Express
     console.log("Tentative de connexion SQL pour:", email);
-    
-    // Exemple de ce à quoi ressemblera l'appel API plus tard :
-    /*
-    const response = await fetch('http://localhost:5000/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    */
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <div className="icon-circle">
-          <span className="material-icons">train</span>
+    <div className="login-page-wrapper">
+      <div className="login-card-modern">
+        <div className="brand-header">
+          <div className="logo-circle-gradient">
+            <span className="material-icons">directions_subway</span>
+          </div>
+          <h2 className="brand-name">SpotC</h2>
+          <p className="brand-tagline">Naviguez Montréal en toute sérénité</p>
         </div>
-        
-        <h2>SpotC</h2>
-        <p className="subtitle">Signaler et éviter les contrôles STM</p>
 
-        <form onSubmit={handleSubmit}>
-          <div className="input-group">
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="input-field-modern">
             <label>Adresse courriel</label>
-            <input 
-              type="email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="votre@email.com" 
-              required 
-            />
+            <div className="input-with-icon">
+              <span className="material-icons">alternate_email</span>
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Exemple@email.com" 
+                required 
+              />
+            </div>
           </div>
 
-          <div className="input-group">
+          <div className="input-field-modern">
             <label>Mot de passe</label>
-            <input 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••" 
-              required 
-            />
+            <div className="input-with-icon">
+              <span className="material-icons">lock_outline</span>
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••" 
+                required 
+              />
+            </div>
           </div>
 
-          <button type="submit" className="login-button">
+          <button type="submit" className="login-btn-primary">
             Se connecter
+            <span className="material-icons">arrow_forward</span>
           </button>
         </form>
 
-        <p className="footer-text">
-          Pas encore de compte ? <a href="#">Créer un compte</a>
-        </p>
+        <div className="login-footer">
+          <p>Pas encore de compte ? <a href="/signup">Créer un compte</a></p>
+        </div>
       </div>
     </div>
   );
 }
 
-export default App;
+export default Login;

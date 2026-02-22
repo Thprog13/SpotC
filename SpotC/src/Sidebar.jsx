@@ -1,75 +1,51 @@
 import React from "react";
+import { Link, useLocation } from "react-router-dom"; 
 
 const Sidebar = () => {
-  return (
-    <div style={styles.sidebar}>
-      {/* Icône du haut (Home/Logo) */}
-      <div style={styles.topIcons}>
-        <div style={styles.iconWrapper}>
-          <span style={styles.homeIcon}>🏠</span>
-        </div>
-        <div style={styles.iconWrapper}>⭐</div>
-        <div style={styles.iconWrapper}>💼</div>
-      </div>
+  const location = useLocation();
+  const isActive = (path) => location.pathname === path;
 
-      {/* Icônes de réseaux sociaux en bas */}
-      <div style={styles.bottomIcons}>
-        <div style={{ ...styles.iconWrapper, backgroundColor: "#E1306C" }}>
-          <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Insta" style={styles.imgIcon} />
-        </div>
-        <div style={{ ...styles.iconWrapper, backgroundColor: "#5865F2" }}>
-          <img src="https://cdn-icons-png.flaticon.com/512/2111/2111370.png" alt="Discord" style={styles.imgIcon} />
-        </div>
-        <div style={{ ...styles.iconWrapper, backgroundColor: "#1DB954" }}>
-          <img src="https://cdn-icons-png.flaticon.com/512/174/174868.png" alt="Spotify" style={styles.imgIcon} />
-        </div>
+  return (
+    <nav style={styles.sidebar}>
+      <div style={styles.topIcons}>
+        <div style={styles.brandBadge}>S</div>
+        <Link to="/home" style={styles.link}>
+          <div style={{ ...styles.iconWrapper, backgroundColor: isActive("/home") ? "rgba(59, 130, 246, 0.2)" : "transparent", color: isActive("/home") ? "#3B82F6" : "#888" }}>
+            <span className="material-icons">home</span>
+          </div>
+        </Link>
+        <Link to="/metro" style={styles.link}>
+          <div style={{ ...styles.iconWrapper, backgroundColor: isActive("/metro") ? "rgba(59, 130, 246, 0.2)" : "transparent", color: isActive("/metro") ? "#3B82F6" : "#888" }}>
+            <span className="material-icons">directions_subway</span>
+          </div>
+        </Link>
+        <Link to="/bus" style={styles.link}>
+          <div style={{ ...styles.iconWrapper, backgroundColor: isActive("/bus") ? "rgba(59, 130, 246, 0.2)" : "transparent", color: isActive("/bus") ? "#3B82F6" : "#888" }}>
+            <span className="material-icons">directions_bus</span>
+          </div>
+        </Link>
       </div>
-    </div>
+      <div style={styles.bottomIcons}>
+        <Link to="/login" style={styles.link}>
+          <div style={{ ...styles.iconWrapper, color: isActive("/login") ? "#3B82F6" : "#888" }}>
+            <span className="material-icons">account_circle</span>
+          </div>
+        </Link>
+      </div>
+    </nav>
   );
 };
 
 const styles = {
   sidebar: {
-    width: "60px",
-    height: "100vh",
-    backgroundColor: "#1e1e1e",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "20px 0",
-    position: "fixed",
-    left: 0,
-    top: 0,
-    boxShadow: "2px 0 5px rgba(0,0,0,0.2)",
+    width: "68px", height: "100vh", backgroundColor: "#121212", display: "flex", flexDirection: "column",
+    justifyContent: "space-between", alignItems: "center", padding: "20px 0", position: "fixed",
+    left: 0, top: 0, borderRight: "1px solid rgba(255, 255, 255, 0.05)", zIndex: 9999,
   },
-  topIcons: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-    color: "#ccc",
-  },
-  bottomIcons: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "15px",
-  },
-  iconWrapper: {
-    width: "40px",
-    height: "40px",
-    borderRadius: "8px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    fontSize: "20px",
-    transition: "0.3s",
-  },
-  imgIcon: {
-    width: "24px",
-    height: "24px",
-    filter: "brightness(0) invert(1)",
-  },
+  brandBadge: { width: "40px", height: "40px", background: "linear-gradient(135deg, #3b82f6, #10b981)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: "bold", marginBottom: "30px" },
+  topIcons: { display: "flex", flexDirection: "column", gap: "12px" },
+  iconWrapper: { width: "48px", height: "48px", borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "0.3s" },
+  link: { textDecoration: "none", color: "inherit" }
 };
 
 export default Sidebar;
