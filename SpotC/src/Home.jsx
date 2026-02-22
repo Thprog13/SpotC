@@ -7,11 +7,10 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
-// IMPORTATION CRUCIALE POUR FIXER L'AFFICHAGE DE LA MAP
-import "leaflet/dist/leaflet.css";
+import "leaflet/dist/leaflet.css"; // Correction de l'affichage de la map
 import "./App.css";
 
-// Fix pour les icônes par défaut de Leaflet qui ne s'affichent pas toujours avec Vite
+// Fix pour les icônes Leaflet par défaut
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 let DefaultIcon = L.icon({
@@ -82,65 +81,87 @@ const busLinesData = [
   { number: "427", name: "St-Joseph Express", eta: "12", color: "#EF4444" },
 ];
 
-// Contrôleur pour centrer la map dynamiquement
 function MapController({ centerPos }) {
   const map = useMap();
   useEffect(() => {
     if (centerPos) {
       map.setView(centerPos, 14);
-      // Force le redimensionnement pour éviter les zones grises
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 100);
+      setTimeout(() => map.invalidateSize(), 100);
     }
   }, [centerPos, map]);
   return null;
 }
 
 export default function Home() {
-  const [center, setCenter] = useState([45.515, -73.58]); // Montréal par défaut
+  const [center, setCenter] = useState([45.515, -73.58]);
   const [userPos, setUserPos] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Fonction pour obtenir la position actuelle
   const handleLocate = () => {
-    if (!navigator.geolocation) {
-      alert("La géolocalisation n'est pas supportée par votre navigateur.");
-      return;
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const newPos = [pos.coords.latitude, pos.coords.longitude];
+          setCenter(newPos);
+          setUserPos(newPos);
+        },
+        () => alert("Erreur de géolocalisation"),
+      );
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const newPos = [position.coords.latitude, position.coords.longitude];
-        setCenter(newPos);
-        setUserPos(newPos);
-      },
-      () => {
-        alert("Impossible de récupérer votre position.");
-      },
-    );
   };
 
-  // Localisation automatique au chargement
   useEffect(() => {
     handleLocate();
   }, []);
+
+  const filteredBus = busLinesData.filter(
+    (b) =>
+      b.number.includes(searchQuery) ||
+      b.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   return (
     <div className="home-container">
       <div className="top-glass-header">
         <div className="header-text">
           <h2>SpotC</h2>
-          <p>Réseau STM en direct</p>
+          <p>Direct STM</p>
         </div>
+
+        <div style={{ flex: 1, margin: "0 15px", position: "relative" }}>
+          <span
+            className="material-icons"
+            style={{
+              position: "absolute",
+              left: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "#888",
+              fontSize: "18px",
+            }}
+          >
+            search
+          </span>
+          <input
+            type="text"
+            placeholder="Ligne ou rue..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "8px 10px 8px 35px",
+              borderRadius: "10px",
+              border: "1px solid rgba(255,255,255,0.1)",
+              background: "rgba(255,255,255,0.05)",
+              color: "white",
+              outline: "none",
+            }}
+          />
+        </div>
+
         <div className="header-actions">
           <button className="icon-btn action-locate" onClick={handleLocate}>
             <span className="material-icons">my_location</span>
-          </button>
-          <button
-            className="icon-btn action-report"
-            onClick={() => alert("Signalement")}
-          >
-            <span className="material-icons">report_problem</span>
           </button>
         </div>
       </div>
@@ -154,7 +175,6 @@ export default function Home() {
         >
           <MapController centerPos={center} />
           <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-
           {metroLinesData.map((line, idx) => (
             <Polyline
               key={idx}
@@ -162,8 +182,6 @@ export default function Home() {
               pathOptions={{ color: line.color, weight: 5, opacity: 0.7 }}
             />
           ))}
-
-          {/* Marqueur de l'utilisateur */}
           {userPos && (
             <Marker
               position={userPos}
@@ -173,12 +191,11 @@ export default function Home() {
         </MapContainer>
       </div>
 
-      {/* Reste du panneau d'information (Bottom Panel) */}
       <div className="bottom-info-panel">
         <div className="drag-handle"></div>
         <div className="info-section">
-          <h3 className="section-title">Prochains passages</h3>
-          {busLinesData.map((bus, idx) => (
+          <h3 className="section-title">Passages ({filteredBus.length})</h3>
+          {filteredBus.map((bus, idx) => (
             <div key={idx} className="bus-card">
               <div className="bus-info-group">
                 <div
@@ -195,28 +212,6 @@ export default function Home() {
               </div>
             </div>
           ))}
-        </div>
-        <div className="info-section">
-          <h3 className="section-title">Statut Métro</h3>
-          <div className="metro-grid">
-            {metroLinesData.map((line, idx) => (
-              <div key={idx} className="metro-card">
-                <div
-                  className="metro-line-dot"
-                  style={{ backgroundColor: line.color }}
-                ></div>
-                <span className="metro-name">{line.name}</span>
-                <span
-                  className="metro-status"
-                  style={{
-                    color: line.status === "En service" ? "#10B981" : "#F97316",
-                  }}
-                >
-                  {line.status === "En service" ? "OK" : "!"}
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

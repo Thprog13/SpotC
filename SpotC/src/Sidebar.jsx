@@ -75,11 +75,11 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
     padding: "20px 0",
-    position: "fixed", // Reste en place lors du scroll
+    position: "fixed",
     left: 0,
     top: 0,
-    borderRight: "1px solid rgba(255, 255, 255, 0.1)",
-    zIndex: 9999, // Passe au-dessus de la carte et des autres éléments
+    borderRight: "1px solid rgba(255, 255, 255, 0.05)",
+    zIndex: 9999,
   },
   brandBadge: {
     width: "40px",
@@ -94,6 +94,7 @@ const styles = {
     marginBottom: "30px",
   },
   topIcons: { display: "flex", flexDirection: "column", gap: "12px" },
+  bottomIcons: { marginBottom: "10px" },
   iconWrapper: {
     width: "48px",
     height: "48px",

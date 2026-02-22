@@ -18,18 +18,16 @@ function App() {
         overflow: "hidden",
       }}
     >
-      {/* La Sidebar est fixe à gauche */}
       <Sidebar />
 
-      {/* On ajoute un flex: 1 et on s'assure que la marge correspond à la largeur de la barre */}
       <main
         style={{
           flex: 1,
-          marginLeft: "68px", // Doit être égal à la largeur définie dans Sidebar.jsx
+          marginLeft: "68px", // Largeur de la Sidebar
           position: "relative",
           height: "100vh",
           width: "calc(100vw - 68px)",
-          overflowY: "auto", // Permet le scroll vertical si le contenu dépasse
+          overflow: "hidden",
         }}
       >
         <Routes>
