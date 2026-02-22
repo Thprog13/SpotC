@@ -9,54 +9,58 @@ const Sidebar = () => {
     <nav style={styles.sidebar}>
       <div style={styles.topIcons}>
         <div style={styles.brandBadge}>S</div>
+        
+        {/* Accueil */}
         <Link to="/home" style={styles.link}>
-          <div
-            style={{
+          <div style={{
               ...styles.iconWrapper,
-              backgroundColor: isActive("/home")
-                ? "rgba(59, 130, 246, 0.2)"
-                : "transparent",
+              backgroundColor: isActive("/home") ? "rgba(59, 130, 246, 0.2)" : "transparent",
               color: isActive("/home") ? "#3B82F6" : "#888",
-            }}
-          >
+            }} title="Accueil">
             <span className="material-icons">home</span>
           </div>
         </Link>
-        <Link to="/metro" style={styles.link}>
-          <div
-            style={{
+
+        {/* NOUVEAU : Créer un Signalement */}
+        <Link to="/signalement" style={styles.link}>
+          <div style={{
               ...styles.iconWrapper,
-              backgroundColor: isActive("/metro")
-                ? "rgba(59, 130, 246, 0.2)"
-                : "transparent",
+              backgroundColor: isActive("/signalement") ? "rgba(239, 68, 68, 0.2)" : "transparent",
+              color: isActive("/signalement") ? "#EF4444" : "#888",
+            }} title="Signaler">
+            <span className="material-icons">add_location</span>
+          </div>
+        </Link>
+        
+        {/* Liste Métro */}
+        <Link to="/metro" style={styles.link}>
+          <div style={{
+              ...styles.iconWrapper,
+              backgroundColor: isActive("/metro") ? "rgba(59, 130, 246, 0.2)" : "transparent",
               color: isActive("/metro") ? "#3B82F6" : "#888",
-            }}
-          >
+            }} title="Métro">
             <span className="material-icons">directions_subway</span>
           </div>
         </Link>
+
+        {/* Liste Bus */}
         <Link to="/bus" style={styles.link}>
-          <div
-            style={{
+          <div style={{
               ...styles.iconWrapper,
-              backgroundColor: isActive("/bus")
-                ? "rgba(59, 130, 246, 0.2)"
-                : "transparent",
+              backgroundColor: isActive("/bus") ? "rgba(59, 130, 246, 0.2)" : "transparent",
               color: isActive("/bus") ? "#3B82F6" : "#888",
-            }}
-          >
+            }} title="Bus">
             <span className="material-icons">directions_bus</span>
           </div>
         </Link>
       </div>
+
       <div style={styles.bottomIcons}>
         <Link to="/login" style={styles.link}>
-          <div
-            style={{
+          <div style={{
               ...styles.iconWrapper,
               color: isActive("/login") ? "#3B82F6" : "#888",
-            }}
-          >
+            }} title="Mon Compte">
             <span className="material-icons">account_circle</span>
           </div>
         </Link>
