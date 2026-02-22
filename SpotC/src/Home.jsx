@@ -4,341 +4,221 @@ import {
   TileLayer,
   Marker,
   Polyline,
-  Tooltip,
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
+// IMPORTATION CRUCIALE POUR FIXER L'AFFICHAGE DE LA MAP
+import "leaflet/dist/leaflet.css";
 import "./App.css";
 
-// --- ICONS & CONFIG ---
-import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
-
+// Fix pour les icônes par défaut de Leaflet qui ne s'affichent pas toujours avec Vite
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 let DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-const createIcon = (color, iconName, size = 36) =>
+const createIcon = (color, iconName, size = 32) =>
   L.divIcon({
     className: "custom-div-icon",
-    html: `<div class="marker-pin" style="border-color: ${color}; background: #222;">
-    <span class="material-icons" style="color: ${color}; font-size: 20px;">${iconName}</span>
-  </div>`,
+    html: `<div class="marker-pin" style="border-color: ${color}; background: #1a1a1a; display: flex; justify-content: center; align-items: center; border: 2px solid; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); width: ${size}px; height: ${size}px;">
+      <span class="material-icons" style="color: ${color}; font-size: 18px; transform: rotate(45deg);">${iconName}</span>
+    </div>`,
     iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    iconAnchor: [size / 2, size],
   });
 
-const stationDotIcon = L.divIcon({
-  className: "station-div",
-  html: `<div class="station-dot"></div>`,
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
-});
-
-// --- DATA ---
-const stmLines = [
+const metroLinesData = [
   {
-    color: "#10B981",
+    name: "Verte",
+    color: "#00884c",
+    status: "En service",
+    positions: [
+      [45.446, -73.591],
+      [45.515, -73.561],
+      [45.566, -73.539],
+    ],
+  },
+  {
+    name: "Orange",
+    color: "#ef8222",
+    status: "Ralentissements",
+    positions: [
+      [45.524, -73.682],
+      [45.487, -73.585],
+      [45.515, -73.561],
+      [45.558, -73.667],
+    ],
+  },
+  {
+    name: "Bleue",
+    color: "#0097d7",
+    status: "En service",
+    positions: [
+      [45.485, -73.627],
+      [45.51, -73.61],
+      [45.559, -73.599],
+    ],
+  },
+  {
+    name: "Jaune",
+    color: "#f5d523",
+    status: "Interruption",
     positions: [
       [45.515, -73.561],
-      [45.525, -73.553],
-      [45.541, -73.543],
-    ],
-  },
-  {
-    color: "#F97316",
-    positions: [
-      [45.515, -73.561],
-      [45.524, -73.581],
-      [45.531, -73.599],
-    ],
-  },
-  {
-    color: "#3B82F6",
-    positions: [
-      [45.508, -73.555],
-      [45.52, -73.57],
-      [45.535, -73.6],
-    ],
-  },
-  {
-    color: "#EC4899",
-    positions: [
-      [45.495, -73.578],
-      [45.51, -73.6],
-      [45.525, -73.62],
+      [45.519, -73.532],
+      [45.525, -73.522],
     ],
   },
 ];
 
-const nearbyLines = [
-  {
-    number: "129",
-    dir: "South",
-    stop: "Côte-Sainte-Catherine",
-    eta: "0",
-    colorClass: "color-blue",
-  },
-  {
-    number: "161",
-    dir: "West",
-    stop: "Van Horne / Darlington",
-    eta: "0",
-    colorClass: "color-pink",
-  },
-  {
-    number: "1",
-    dir: "Green",
-    stop: "Station Berri-UQAM",
-    eta: "2",
-    colorClass: "color-green",
-  },
+const busLinesData = [
+  { number: "121", name: "Sauvé / Côte-Vertu", eta: "4", color: "#3B82F6" },
+  { number: "139", name: "Pie-IX", eta: "8", color: "#10B981" },
+  { number: "427", name: "St-Joseph Express", eta: "12", color: "#EF4444" },
 ];
 
-const reportsData = [
-  {
-    id: 1,
-    station: "Berri-UQAM",
-    desc: "Control Agents at exit",
-    time: "2m ago",
-    color: "#3B82F6",
-    icon: "local_police",
-  },
-  {
-    id: 2,
-    station: "Snowdon",
-    desc: "Escalator broken",
-    time: "15m ago",
-    color: "#F97316",
-    icon: "warning",
-  },
-  {
-    id: 3,
-    station: "McGill",
-    desc: "Service Delay",
-    time: "5m ago",
-    color: "#EF4444",
-    icon: "schedule",
-  },
-];
-
-// --- SUB-COMPONENTS ---
+// Contrôleur pour centrer la map dynamiquement
 function MapController({ centerPos }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(centerPos, 13);
+    if (centerPos) {
+      map.setView(centerPos, 14);
+      // Force le redimensionnement pour éviter les zones grises
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+    }
   }, [centerPos, map]);
   return null;
 }
 
-function ReportModal({ onClose }) {
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="report-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-handle"></div>
-        <h3>Report an Issue</h3>
-        <p className="modal-subtitle">Help others avoid delays and controls.</p>
-
-        <div className="report-btn-grid">
-          <button
-            className="report-option"
-            onClick={() => {
-              alert("Reported!");
-              onClose();
-            }}
-          >
-            <div className="icon-circle bg-red">
-              <span className="material-icons">schedule</span>
-            </div>
-            <div>
-              <h4>Service Delay</h4>
-              <p>Train is stopped</p>
-            </div>
-          </button>
-          <button
-            className="report-option"
-            onClick={() => {
-              alert("Reported!");
-              onClose();
-            }}
-          >
-            <div className="icon-circle bg-orange">
-              <span className="material-icons">warning</span>
-            </div>
-            <div>
-              <h4>Hazard</h4>
-              <p>Elevator/Escalator issue</p>
-            </div>
-          </button>
-          <button
-            className="report-option"
-            onClick={() => {
-              alert("Reported!");
-              onClose();
-            }}
-          >
-            <div className="icon-circle bg-blue">
-              <span className="material-icons">local_police</span>
-            </div>
-            <div>
-              <h4>Control Agents</h4>
-              <p>Ticket inspectors visible</p>
-            </div>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SignalementsList({ onClose }) {
-  return (
-    <div className="signalements-overlay">
-      <div className="sig-header">
-        <button className="back-btn" onClick={onClose}>
-          <span className="material-icons">arrow_back</span>
-        </button>
-        <h2>Signalements</h2>
-      </div>
-      <div className="sig-list">
-        {reportsData.map((r) => (
-          <div key={r.id} className="sig-card">
-            <div
-              className="icon-circle"
-              style={{ background: `${r.color}20`, color: r.color }}
-            >
-              <span className="material-icons">{r.icon}</span>
-            </div>
-            <div className="sig-content">
-              <h4>{r.station}</h4>
-              <p>{r.desc}</p>
-              <span
-                className="sig-tag"
-                style={{ color: r.color, background: `${r.color}20` }}
-              >
-                {r.time}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// --- MAIN COMPONENT ---
 export default function Home() {
-  const [view, setView] = useState("menu"); // 'menu', 'signalements'
-  const [showReport, setShowReport] = useState(false);
-  const mtlCenter = [45.515, -73.58];
+  const [center, setCenter] = useState([45.515, -73.58]); // Montréal par défaut
+  const [userPos, setUserPos] = useState(null);
+
+  // Fonction pour obtenir la position actuelle
+  const handleLocate = () => {
+    if (!navigator.geolocation) {
+      alert("La géolocalisation n'est pas supportée par votre navigateur.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const newPos = [position.coords.latitude, position.coords.longitude];
+        setCenter(newPos);
+        setUserPos(newPos);
+      },
+      () => {
+        alert("Impossible de récupérer votre position.");
+      },
+    );
+  };
+
+  // Localisation automatique au chargement
+  useEffect(() => {
+    handleLocate();
+  }, []);
 
   return (
     <div className="home-container">
-      {/* MAP LAYER */}
-      <div className="map-wrapper">
-        <MapContainer
-          center={mtlCenter}
-          zoom={13}
-          zoomControl={false}
-          style={{ height: "100%", width: "100%" }}
-        >
-          <MapController centerPos={mtlCenter} />
-          <TileLayer
-            attribution="&copy; CARTO"
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          />
-
-          {stmLines.map((line, idx) => (
-            <Polyline
-              key={idx}
-              positions={line.positions}
-              pathOptions={{ color: line.color, weight: 4, opacity: 0.7 }}
-            />
-          ))}
-          <Marker
-            position={mtlCenter}
-            icon={createIcon("#3B82F6", "my_location")}
-          />
-          <Marker
-            position={[45.515, -73.561]}
-            icon={createIcon("#3B82F6", "local_police")}
-          />
-        </MapContainer>
-      </div>
-
-      {/* UI LAYERS */}
-      {view === "menu" && (
-        <div className="ui-overlay">
-          {/* Header */}
-          <div className="header-area slide-up">
-            <div className="location-bar">
-              <div className="search-text">
-                <span className="search-label">Options near</span>
-                <span className="search-value">Montreal, QC</span>
-              </div>
-              <div className="nav-icon">
-                <span className="material-icons">near_me</span>
-              </div>
-            </div>
-            <div
-              className="btn-signalements"
-              onClick={() => setView("signalements")}
-            >
-              <div style={{ position: "relative" }}>
-                <span className="material-icons">notifications</span>
-                <div className="notification-badge"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Report FAB */}
+      <div className="top-glass-header">
+        <div className="header-text">
+          <h2>SpotC</h2>
+          <p>Réseau STM en direct</p>
+        </div>
+        <div className="header-actions">
+          <button className="icon-btn action-locate" onClick={handleLocate}>
+            <span className="material-icons">my_location</span>
+          </button>
           <button
-            className="fab-report slide-up"
-            onClick={() => setShowReport(true)}
+            className="icon-btn action-report"
+            onClick={() => alert("Signalement")}
           >
             <span className="material-icons">report_problem</span>
           </button>
+        </div>
+      </div>
 
-          {/* Bottom List */}
-          <div className="nearby-lines-container slide-up">
-            {nearbyLines.map((line, idx) => (
-              <div key={idx} className="line-row">
-                <div className="line-info">
-                  <div className={`line-number ${line.colorClass}`}>
-                    {line.number}
-                  </div>
-                  <div className="line-details">
-                    <span className={`line-direction ${line.colorClass}`}>
-                      {line.dir}
-                    </span>
-                    <span className="line-stop">{line.stop}</span>
-                  </div>
+      <div className="map-wrapper">
+        <MapContainer
+          center={center}
+          zoom={12}
+          zoomControl={false}
+          style={{ height: "100%", width: "100%" }}
+        >
+          <MapController centerPos={center} />
+          <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+
+          {metroLinesData.map((line, idx) => (
+            <Polyline
+              key={idx}
+              positions={line.positions}
+              pathOptions={{ color: line.color, weight: 5, opacity: 0.7 }}
+            />
+          ))}
+
+          {/* Marqueur de l'utilisateur */}
+          {userPos && (
+            <Marker
+              position={userPos}
+              icon={createIcon("#3B82F6", "person_pin")}
+            />
+          )}
+        </MapContainer>
+      </div>
+
+      {/* Reste du panneau d'information (Bottom Panel) */}
+      <div className="bottom-info-panel">
+        <div className="drag-handle"></div>
+        <div className="info-section">
+          <h3 className="section-title">Prochains passages</h3>
+          {busLinesData.map((bus, idx) => (
+            <div key={idx} className="bus-card">
+              <div className="bus-info-group">
+                <div
+                  className="bus-badge"
+                  style={{ backgroundColor: bus.color }}
+                >
+                  {bus.number}
                 </div>
-                <div className="line-eta">
-                  <span
-                    className="material-icons"
-                    style={{ color: "#3B82F6", fontSize: "1rem" }}
-                  >
-                    rss_feed
-                  </span>
-                  <span className="eta-number">{line.eta}</span>
-                  <span className="eta-unit">min</span>
-                </div>
+                <span className="bus-name">{bus.name}</span>
+              </div>
+              <div className="bus-eta">
+                <span className="eta-num">{bus.eta}</span>
+                <span className="eta-unit">min</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="info-section">
+          <h3 className="section-title">Statut Métro</h3>
+          <div className="metro-grid">
+            {metroLinesData.map((line, idx) => (
+              <div key={idx} className="metro-card">
+                <div
+                  className="metro-line-dot"
+                  style={{ backgroundColor: line.color }}
+                ></div>
+                <span className="metro-name">{line.name}</span>
+                <span
+                  className="metro-status"
+                  style={{
+                    color: line.status === "En service" ? "#10B981" : "#F97316",
+                  }}
+                >
+                  {line.status === "En service" ? "OK" : "!"}
+                </span>
               </div>
             ))}
           </div>
         </div>
-      )}
-
-      {/* OVERLAYS */}
-      {showReport && <ReportModal onClose={() => setShowReport(false)} />}
-      {view === "signalements" && (
-        <SignalementsList onClose={() => setView("menu")} />
-      )}
+      </div>
     </div>
   );
 }
