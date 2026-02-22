@@ -1,0 +1,133 @@
+/* Conteneur principal */
+.login-page-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: radial-gradient(circle at top right, #1e3a8a, #121212);
+}
+
+/* Carte effet verre dépoli */
+.login-card-modern {
+  background: rgba(25, 25, 25, 0.85);
+  backdrop-filter: blur(15px);
+  padding: 40px;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+
+/* Logo et En-tête */
+.logo-circle-gradient {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #3b82f6, #10b981);
+  border-radius: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 15px;
+}
+
+.logo-circle-gradient span {
+  font-size: 32px;
+  color: white;
+}
+
+.brand-name {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.brand-tagline {
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+/* Champs d'entrée */
+.input-field-modern {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.input-field-modern label {
+  color: #ccc;
+  font-size: 13px;
+  margin-left: 5px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon span {
+  position: absolute;
+  left: 15px;
+  color: #555;
+  font-size: 20px;
+}
+
+.input-with-icon input {
+  width: 100%;
+  padding: 12px 15px 12px 45px;
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+.input-with-icon input:focus {
+  border-color: #3b82f6;
+  background: #2a2a2a;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Bouton */
+.login-btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-top: 10px;
+}
+
+.login-btn-primary:hover {
+  background: #2563eb;
+}
+
+/* Pied de page */
+.login-footer {
+  margin-top: 25px;
+  color: #888;
+  font-size: 14px;
+}
+
+.login-footer a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 600;
+}
