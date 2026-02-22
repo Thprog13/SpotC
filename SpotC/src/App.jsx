@@ -6,6 +6,7 @@ import Login from "./Login";
 import SignUp from "./SignUp";
 import Metro from "./Metro";
 import Bus from "./Bus";
+import Signalement from "./Signalement";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/metro" element={<Metro />} />
           <Route path="/bus" element={<Bus />} />
+          <Route path="/Signalement" element={<Signalement />} />
         </Routes>
       </main>
     </div>

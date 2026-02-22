@@ -1,0 +1,62 @@
+.sig-modal-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex; align-items: flex-end;
+  z-index: 2000;
+}
+
+.sig-card-compact {
+  width: 100%;
+  background: #1a1a1a;
+  border-radius: 20px 20px 0 0;
+  padding: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sig-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px;
+}
+
+.sig-header h3 { font-size: 16px; font-weight: 700; color: white; }
+
+.close-btn { background: none; border: none; color: #777; font-size: 24px; cursor: pointer; }
+
+/* Grille de types */
+.type-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  margin-bottom: 20px;
+}
+
+.type-item {
+  background: #252525; border: 1px solid #333; border-radius: 12px;
+  padding: 12px; color: #888; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.type-item span { font-size: 24px; }
+.type-item p { font-size: 11px; font-weight: 600; margin: 0; }
+
+/* Couleurs actives */
+.active-police { border-color: #3b82f6; color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+.active-delay { border-color: #f97316; color: #f97316; background: rgba(249, 115, 22, 0.1); }
+.active-issue { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
+/* Formulaire */
+.input-group-sig { margin-bottom: 20px; text-align: left; }
+.input-group-sig label { font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 8px; display: block; }
+
+.input-group-sig textarea {
+  width: 100%; background: #222; border: 1px solid #333; border-radius: 10px;
+  padding: 10px; color: white; font-family: inherit; resize: none; height: 60px;
+}
+
+.submit-sig-btn {
+  width: 100%; padding: 14px; background: #3b82f6; color: white;
+  border: none; border-radius: 12px; font-weight: 700; cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.submit-sig-btn:disabled { opacity: 0.5; }

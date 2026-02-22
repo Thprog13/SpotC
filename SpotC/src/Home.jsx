@@ -144,7 +144,7 @@ export default function Home() {
           </span>
           <input
             type="text"
-            placeholder="Ligne ou rue..."
+            placeholder="Rechercher une ligne ou une station..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
