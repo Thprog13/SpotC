@@ -24,11 +24,12 @@ function App() {
       <main
         style={{
           flex: 1,
-          marginLeft: "68px", // Largeur de la Sidebar
+          marginLeft: "68px",
           position: "relative",
           height: "100vh",
           width: "calc(100vw - 68px)",
-          overflow: "hidden",
+          overflowY: "auto", 
+          overflowX: "hidden",
         }}
       >
         <Routes>
