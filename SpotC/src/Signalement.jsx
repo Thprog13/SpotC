@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // Firestore functions
+import { db, auth } from "./firebase";
 import "./Signalement.css";
 
 const Signalement = ({ onSignalementSuccess, onClose }) => {
@@ -6,7 +8,7 @@ const Signalement = ({ onSignalementSuccess, onClose }) => {
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!type) {
       alert("Veuillez sélectionner un type de signalement.");
@@ -15,75 +17,34 @@ const Signalement = ({ onSignalementSuccess, onClose }) => {
 
     setIsSubmitting(true);
 
-    // Simulation d'envoi à ta base de données SQL
-    const nouveauSignalement = {
-      id: Date.now(),
-      type,
-      description,
-      timestamp: new Date().toLocaleTimeString(),
-      expiresAt: Date.now() + 30 * 60 * 1000, // Expire dans 30 minutes
-    };
+    try {
+      // Save to Firestore collection named "reports"
+      const docRef = await addDoc(collection(db, "reports"), {
+        type: type,
+        description: description,
+        userId: auth.currentUser ? auth.currentUser.uid : "Anonyme", // Track user
+        createdAt: serverTimestamp(), // Database time
+        expiresAt: Date.now() + 30 * 60 * 1000,
+      });
 
-    console.log("Signalement envoyé :", nouveauSignalement);
-
-    // Logique d'auto-suppression après 30 minutes (1800000 ms)
-    setTimeout(() => {
-      console.log(`Le signalement ${nouveauSignalement.id} a été retiré de la carte.`);
-    }, 1800000);
-
-    setTimeout(() => {
-      setIsSubmitting(false);
-      onSignalementSuccess(nouveauSignalement);
+      console.log("Signalement enregistré avec ID: ", docRef.id);
+      
+      onSignalementSuccess({ id: docRef.id, type, description });
       onClose();
-    }, 800);
+    } catch (error) {
+      console.error("Erreur d'ajout:", error);
+      alert("Erreur lors de l'envoi du signalement.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="sig-modal-overlay">
+      {/* ... keep existing form structure ... */}
       <div className="sig-card-compact slide-up">
-        <div className="sig-header">
-          <h3>Nouveau Signalement</h3>
-          <button className="close-btn" onClick={onClose}>&times;</button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="sig-form">
-          <div className="type-grid">
-            <button 
-              type="button" 
-              className={`type-item ${type === 'Police' ? 'active-police' : ''}`}
-              onClick={() => setType('Police')}
-            >
-              <span className="material-icons">local_police</span>
-              <p>Contrôle</p>
-            </button>
-            <button 
-              type="button" 
-              className={`type-item ${type === 'Retard' ? 'active-delay' : ''}`}
-              onClick={() => setType('Retard')}
-            >
-              <span className="material-icons">schedule</span>
-              <p>Retard</p>
-            </button>
-            <button 
-              type="button" 
-              className={`type-item ${type === 'Panne' ? 'active-issue' : ''}`}
-              onClick={() => setType('Panne')}
-            >
-              <span className="material-icons">report_problem</span>
-              <p>Panne</p>
-            </button>
-          </div>
-
-          <div className="input-group-sig">
-            <label>Précisions (optionnel)</label>
-            <textarea 
-              placeholder="Ex: Sortie Berri, agents visibles..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              maxLength="100"
-            />
-          </div>
-
+        <form onSubmit={handleSubmit}>
+          {/* ... type buttons and description textarea ... */}
           <button type="submit" className="submit-sig-btn" disabled={isSubmitting}>
             {isSubmitting ? "Envoi..." : "Signaler pour 30 min"}
           </button>
