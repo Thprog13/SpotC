@@ -5,7 +5,7 @@ import {
   signInWithPopup, 
   signInAnonymously 
 } from 'firebase/auth';
-import { auth, googleProvider } from './firebase'; // Ensure this path is correct
+import { auth, googleProvider } from './firebase'; // Vérifiez que le chemin est correct
 import './Login.css';
 
 function Login() {
@@ -16,7 +16,9 @@ function Login() {
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
+    setError(''); // Réinitialise l'erreur avant la tentative
     try {
+      // Firebase attend un string valide pour l'email
       await signInWithEmailAndPassword(auth, email, password);
       navigate('/home');
     } catch (err) {
@@ -45,21 +47,67 @@ function Login() {
   return (
     <div className="login-page-wrapper">
       <div className="login-card-modern">
-        <h2 className="brand-name">SpotC</h2>
-        {error && <p style={{ color: '#ef4444' }}>{error}</p>}
-        
-        <form onSubmit={handleEmailLogin}>
-          {/* Email and Password inputs as before */}
-          <button type="submit" className="login-btn-primary">Se connecter</button>
+        <div className="brand-header">
+          <div className="logo-circle-gradient">
+            <span className="material-icons">directions_subway</span>
+          </div>
+          <h2 className="brand-name">SpotC</h2>
+          <p className="brand-tagline">Naviguez Montréal en toute sérénité</p>
+        </div>
+
+        {error && <p className="error-message">{error}</p>}
+
+        <form onSubmit={handleEmailLogin} className="login-form">
+          <div className="input-field-modern">
+            <label>Adresse courriel</label>
+            <div className="input-with-icon">
+              <span className="material-icons">alternate_email</span>
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Exemple@email.com" 
+                required 
+              />
+            </div>
+          </div>
+
+          <div className="input-field-modern">
+            <label>Mot de passe</label>
+            <div className="input-with-icon">
+              <span className="material-icons">lock_outline</span>
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••" 
+                required 
+              />
+            </div>
+          </div>
+
+          <button type="submit" className="login-btn-primary">
+            Se connecter
+            <span className="material-icons">arrow_forward</span>
+          </button>
         </form>
 
-        <div style={{ marginTop: '20px' }}>
-          <button onClick={handleGoogleLogin} className="login-btn-secondary">
+        <div className="social-separator">ou</div>
+
+        <div className="social-login-group">
+          <button onClick={handleGoogleLogin} className="login-btn-secondary google-btn">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
             Continuer avec Google
           </button>
-          <button onClick={handleAnonymousLogin} style={{ display: 'block', margin: '10px auto' }}>
+          
+          <button onClick={handleAnonymousLogin} className="login-btn-secondary guest-btn">
+            <span className="material-icons">person_outline</span>
             Continuer en tant qu'invité
           </button>
+        </div>
+
+        <div className="login-footer">
+          <p>Pas encore de compte ? <a href="/signup">Créer un compte</a></p>
         </div>
       </div>
     </div>
