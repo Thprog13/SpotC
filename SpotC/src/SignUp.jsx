@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from './firebase';
 import './Login.css';
 
 function SignUp() {
@@ -15,16 +17,21 @@ function SignUp() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       alert("Les mots de passe ne correspondent pas !");
       return;
     }
-    // Ici, tu feras l'appel : fetch('http://localhost:5000/api/signup', ...)
-    console.log("Création de compte pour :", formData.username);
-    alert("Compte créé avec succès !");
-    navigate('/login');
+    
+    try {
+      // Création de l'utilisateur dans Firebase
+      await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      alert("Compte créé avec succès !");
+      navigate('/login');
+    } catch (err) {
+      alert("Erreur lors de l'inscription : " + err.message);
+    }
   };
 
   return (
