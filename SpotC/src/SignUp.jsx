@@ -120,4 +120,4 @@ const handleSubmit = async (e) => {
   );
 }
 
-export default SignUp;  A
+export default SignUp;
