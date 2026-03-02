@@ -1,219 +1,235 @@
 import React, { useState, useEffect } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Polyline,
-  useMap,
-} from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { app } from "./firebase";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css"; // Correction de l'affichage de la map
-import "./App.css";
 
-// Fix pour les icônes Leaflet par défaut
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
+// Fix for default Leaflet icons in React (User's location)
+import icon from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
 let DefaultIcon = L.icon({
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
+  iconUrl: icon,
+  shadowUrl: iconShadow,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-const createIcon = (color, iconName, size = 32) =>
-  L.divIcon({
-    className: "custom-div-icon",
-    html: `<div class="marker-pin" style="border-color: ${color}; background: #1a1a1a; display: flex; justify-content: center; align-items: center; border: 2px solid; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); width: ${size}px; height: ${size}px;">
-      <span class="material-icons" style="color: ${color}; font-size: 18px; transform: rotate(45deg);">${iconName}</span>
-    </div>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size],
-  });
+// Custom Bus Icon (Uses an emoji so you don't need to import images)
+const busIcon = new L.divIcon({
+  html: '<div style="font-size: 28px; line-height: 1; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));">🚌</div>',
+  className: "custom-bus-icon",
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+  popupAnchor: [0, -15],
+});
 
-const metroLinesData = [
-  {
-    name: "Verte",
-    color: "#00884c",
-    status: "En service",
-    positions: [
-      [45.446, -73.591],
-      [45.515, -73.561],
-      [45.566, -73.539],
-    ],
-  },
-  {
-    name: "Orange",
-    color: "#ef8222",
-    status: "Ralentissements",
-    positions: [
-      [45.524, -73.682],
-      [45.487, -73.585],
-      [45.515, -73.561],
-      [45.558, -73.667],
-    ],
-  },
-  {
-    name: "Bleue",
-    color: "#0097d7",
-    status: "En service",
-    positions: [
-      [45.485, -73.627],
-      [45.51, -73.61],
-      [45.559, -73.599],
-    ],
-  },
-  {
-    name: "Jaune",
-    color: "#f5d523",
-    status: "Interruption",
-    positions: [
-      [45.515, -73.561],
-      [45.519, -73.532],
-      [45.525, -73.522],
-    ],
-  },
-];
-
-const busLinesData = [
-  { number: "121", name: "Sauvé / Côte-Vertu", eta: "4", color: "#3B82F6" },
-  { number: "139", name: "Pie-IX", eta: "8", color: "#10B981" },
-  { number: "427", name: "St-Joseph Express", eta: "12", color: "#EF4444" },
-];
-
-function MapController({ centerPos }) {
+// Helper component to smoothly pan the map when a bus is selected
+const MapController = ({ userLat, userLng, selectedBus }) => {
   const map = useMap();
   useEffect(() => {
-    if (centerPos) {
-      map.setView(centerPos, 14);
-      setTimeout(() => map.invalidateSize(), 100);
+    if (selectedBus) {
+      // Pan to the bus if one is clicked
+      map.flyTo([selectedBus.latitude, selectedBus.longitude], 16, {
+        duration: 1.5,
+      });
+    } else if (userLat && userLng) {
+      // Default center is the user
+      map.flyTo([userLat, userLng], 14, { duration: 1.5 });
     }
-  }, [centerPos, map]);
+  }, [userLat, userLng, selectedBus, map]);
   return null;
-}
+};
 
-export default function Home() {
-  const [center, setCenter] = useState([45.515, -73.58]);
-  const [userPos, setUserPos] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
 
-  const handleLocate = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const newPos = [pos.coords.latitude, pos.coords.longitude];
-          setCenter(newPos);
-          setUserPos(newPos);
-        },
-        () => alert("Erreur de géolocalisation"),
+const Home = () => {
+  const [userLoc, setUserLoc] = useState(null);
+  const [nearbyBuses, setNearbyBuses] = useState([]);
+  const [selectedBus, setSelectedBus] = useState(null); // NEW: Tracks clicked bus
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLoc({ lat: latitude, lng: longitude });
+        fetchNearbyBuses(latitude, longitude);
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        const defaultLat = 45.5017;
+        const defaultLng = -73.5673;
+        setUserLoc({ lat: defaultLat, lng: defaultLng });
+        fetchNearbyBuses(defaultLat, defaultLng);
+      },
+    );
+  }, []);
+
+  const fetchNearbyBuses = async (userLat, userLng) => {
+    try {
+      setLoading(true);
+      const functions = getFunctions(app);
+      const getVehiclePositions = httpsCallable(
+        functions,
+        "getVehiclePositions",
       );
+      const result = await getVehiclePositions();
+
+      const allBuses = result.data.data;
+
+      const busesNearMe = allBuses
+        .map((bus) => {
+          const distance = calculateDistance(
+            userLat,
+            userLng,
+            bus.latitude,
+            bus.longitude,
+          );
+          const etaMinutes = Math.round((distance / 15) * 60);
+          return { ...bus, distance, etaMinutes };
+        })
+        .filter((bus) => bus.distance <= 2) // CHANGED: Now strictly 2km
+        .sort((a, b) => a.distance - b.distance);
+
+      setNearbyBuses(busesNearMe);
+    } catch (error) {
+      console.error("Error fetching map data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    handleLocate();
-  }, []);
-
-  const filteredBus = busLinesData.filter(
-    (b) =>
-      b.number.includes(searchQuery) ||
-      b.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const styles = {
+    container: {
+      padding: "20px",
+      color: "white",
+      backgroundColor: "#121212",
+      minHeight: "100vh",
+    },
+    mapWrapper: {
+      height: "50vh",
+      width: "100%",
+      borderRadius: "12px",
+      overflow: "hidden",
+      marginTop: "15px",
+      border: "1px solid #333",
+    },
+    busList: {
+      marginTop: "20px",
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+      gap: "12px",
+    },
+    card: (isSelected) => ({
+      backgroundColor: isSelected ? "#2a2a2a" : "#1e1e1e",
+      padding: "15px",
+      borderRadius: "8px",
+      border: isSelected ? "2px solid #3b82f6" : "1px solid #333",
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+      transform: isSelected ? "scale(1.02)" : "scale(1)",
+    }),
+  };
 
   return (
-    <div className="home-container">
-      <div className="top-glass-header">
-        <div className="header-text">
-          <h2>SpotC</h2>
-          <p>Direct STM</p>
-        </div>
+    <div style={styles.container}>
+      <h2>📍 Bus Près de Vous</h2>
+      <p style={{ color: "#aaa" }}>
+        {loading
+          ? "Recherche des bus en cours..."
+          : `${nearbyBuses.length} bus trouvés dans un rayon de 2km. Cliquez sur un bus pour le voir sur la carte.`}
+      </p>
 
-        <div style={{ flex: 1, margin: "0 15px", position: "relative" }}>
-          <span
-            className="material-icons"
-            style={{
-              position: "absolute",
-              left: "10px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              color: "#888",
-              fontSize: "18px",
-            }}
+      {/* THE MAP */}
+      <div style={styles.mapWrapper}>
+        {userLoc && (
+          <MapContainer
+            center={[userLoc.lat, userLoc.lng]}
+            zoom={14}
+            style={{ height: "100%", width: "100%" }}
+            theme="dark"
           >
-            search
-          </span>
-          <input
-            type="text"
-            placeholder="Rechercher une ligne ou une station..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "8px 10px 8px 35px",
-              borderRadius: "10px",
-              border: "1px solid rgba(255,255,255,0.1)",
-              background: "rgba(255,255,255,0.05)",
-              color: "white",
-              outline: "none",
-            }}
-          />
-        </div>
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+            />
 
-        <div className="header-actions">
-          <button className="icon-btn action-locate" onClick={handleLocate}>
-            <span className="material-icons">my_location</span>
-          </button>
-        </div>
+            {/* Smoothly pans map to the selected bus or user */}
+            <MapController
+              userLat={userLoc.lat}
+              userLng={userLoc.lng}
+              selectedBus={selectedBus}
+            />
+
+            {/* Standard Blue Pin for the User */}
+            <Marker position={[userLoc.lat, userLoc.lng]}>
+              <Popup>Vous êtes ici</Popup>
+            </Marker>
+
+            {/* Custom Bus Marker - ONLY displays if a bus is selected */}
+            {selectedBus && (
+              <Marker
+                position={[selectedBus.latitude, selectedBus.longitude]}
+                icon={busIcon}
+              >
+                <Popup>
+                  <strong style={{ color: "black", fontSize: "16px" }}>
+                    Ligne {selectedBus.routeId}
+                  </strong>
+                  <br />
+                  Bus #{selectedBus.vehicleId}
+                  <br />
+                  Distance: {selectedBus.distance.toFixed(1)} km
+                  <br />
+                  Temps estimé: {selectedBus.etaMinutes} min
+                  <br />
+                </Popup>
+              </Marker>
+            )}
+          </MapContainer>
+        )}
       </div>
 
-      <div className="map-wrapper">
-        <MapContainer
-          center={center}
-          zoom={12}
-          zoomControl={false}
-          style={{ height: "100%", width: "100%" }}
-        >
-          <MapController centerPos={center} />
-          <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-          {metroLinesData.map((line, idx) => (
-            <Polyline
+      {/* TEXT LIST OF CLOSEST BUSES */}
+      <div style={styles.busList}>
+        {nearbyBuses.slice(0, 8).map((bus, idx) => {
+          const isSelected = selectedBus?.vehicleId === bus.vehicleId;
+
+          return (
+            <div
               key={idx}
-              positions={line.positions}
-              pathOptions={{ color: line.color, weight: 5, opacity: 0.7 }}
-            />
-          ))}
-          {userPos && (
-            <Marker
-              position={userPos}
-              icon={createIcon("#3B82F6", "person_pin")}
-            />
-          )}
-        </MapContainer>
-      </div>
-
-      <div className="bottom-info-panel">
-        <div className="drag-handle"></div>
-        <div className="info-section">
-          <h3 className="section-title">Passages ({filteredBus.length})</h3>
-          {filteredBus.map((bus, idx) => (
-            <div key={idx} className="bus-card">
-              <div className="bus-info-group">
-                <div
-                  className="bus-badge"
-                  style={{ backgroundColor: bus.color }}
-                >
-                  {bus.number}
-                </div>
-                <span className="bus-name">{bus.name}</span>
-              </div>
-              <div className="bus-eta">
-                <span className="eta-num">{bus.eta}</span>
-                <span className="eta-unit">min</span>
-              </div>
+              style={styles.card(isSelected)}
+              onClick={() => setSelectedBus(isSelected ? null : bus)} // Toggle selection
+            >
+              <h3 style={{ margin: "0 0 5px 0" }}>Ligne {bus.routeId}</h3>
+              <p style={{ margin: 0, color: "#4ade80", fontWeight: "bold" }}>
+                {bus.etaMinutes} min ({bus.distance.toFixed(1)} km)
+              </p>
+              <p
+                style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#888" }}
+              >
+                Dernière MAJ: {bus.lastUpdated}
+              </p>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </div>
   );
-}
+};
+
+export default Home;

@@ -6,37 +6,46 @@ import { app } from "./firebase";
 const Bus = () => {
   const [search, setSearch] = useState("");
   const [liveData, setLiveData] = useState({});
+  const [busPositions, setBusPositions] = useState([]); // NEW: State for GPS locations
   const [loadingLive, setLoadingLive] = useState(true);
 
-  // Fetch Live Data from Firebase on mount
   useEffect(() => {
     const fetchLiveBusData = async () => {
       try {
         const functions = getFunctions(app);
+
+        // Setup both backend calls
         const getTransitUpdates = httpsCallable(functions, "getTransitUpdates");
-        const result = await getTransitUpdates();
+        const getVehiclePositions = httpsCallable(
+          functions,
+          "getVehiclePositions",
+        ); // NEW
 
-        // Group the live updates by Route ID
+        // Run both fetches at the same time for better speed
+        const [updatesResult, positionsResult] = await Promise.all([
+          getTransitUpdates(),
+          getVehiclePositions(),
+        ]);
+
+        // 1. Process Status Data (Active/Canceled)
         const routeStatus = {};
-
-        result.data.data.forEach((entity) => {
+        updatesResult.data.data.forEach((entity) => {
           const routeId = entity.tripUpdate?.trip?.routeId;
           const isCanceled =
             entity.tripUpdate?.trip?.scheduleRelationship === 3;
-
           if (routeId) {
-            if (!routeStatus[routeId]) {
+            if (!routeStatus[routeId])
               routeStatus[routeId] = { active: 0, canceled: 0 };
-            }
-            if (isCanceled) {
-              routeStatus[routeId].canceled += 1;
-            } else {
-              routeStatus[routeId].active += 1;
-            }
+            if (isCanceled) routeStatus[routeId].canceled += 1;
+            else routeStatus[routeId].active += 1;
           }
         });
-
         setLiveData(routeStatus);
+
+        // 2. Process GPS Locations (Ready for the map!)
+        const locations = positionsResult.data.data;
+        console.log("GPS Locations Ready for Map:", locations);
+        setBusPositions(locations);
       } catch (error) {
         console.error("Error fetching live data:", error);
       } finally {
@@ -45,8 +54,6 @@ const Bus = () => {
     };
 
     fetchLiveBusData();
-
-    // Optional: Refresh data every 60 seconds
     const interval = setInterval(fetchLiveBusData, 60000);
     return () => clearInterval(interval);
   }, []);
