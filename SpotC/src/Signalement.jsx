@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { metroLines } from "./metroData"; 
+import { metroLines } from "./metroData";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore"; // Ajout de Firestore
+import { db } from "./firebase"; // Import de la base de données
 import "./Signalement.css";
 
 const Signalement = () => {
@@ -10,10 +12,10 @@ const Signalement = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Récupération de toutes les stations pour le menu déroulant
-  const allStations = metroLines.flatMap(line => line.stations).sort();
-
-  const handleSubmit = (e) => {
+  const allStations = [
+    ...new Set(metroLines.flatMap((line) => line.stations)),
+  ].sort();
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!type || !station) {
       alert("Veuillez sélectionner une station et un type d'incident.");
@@ -22,13 +24,26 @@ const Signalement = () => {
 
     setIsSubmitting(true);
 
-    // Simulation d'envoi SQL
-    setTimeout(() => {
-      console.log("Signalement envoyé pour :", station);
-      alert(`Signalement diffusé à ${station}. Il expirera dans 30 min.`);
+    try {
+      // Envoi des données vers Firestore
+      await addDoc(collection(db, "signalements"), {
+        station: station,
+        type: type,
+        description: description,
+        createdAt: serverTimestamp(), // Timestamp sécurisé du serveur
+      });
+
+      console.log("Signalement sauvegardé dans Firebase pour :", station);
+      alert(
+        `Signalement diffusé à ${station}. Il expirera automatiquement dans 30 min.`,
+      );
+      navigate("/metro"); // Redirection vers l'onglet Métro
+    } catch (error) {
+      console.error("Erreur lors de l'ajout du signalement: ", error);
+      alert("Erreur lors de l'envoi du signalement. Vérifiez votre connexion.");
+    } finally {
       setIsSubmitting(false);
-      navigate('/metro'); // Redirection vers l'onglet Métro
-    }, 800);
+    }
   };
 
   return (
@@ -36,47 +51,53 @@ const Signalement = () => {
       <div className="sig-card-compact slide-up">
         <div className="sig-header">
           <h3>Nouveau Signalement</h3>
-          <button className="close-x-btn" onClick={() => navigate('/home')}>&times;</button>
+          <button className="close-x-btn" onClick={() => navigate("/home")}>
+            &times;
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="sig-form">
           <div className="input-group-sig">
             <label>STATION CONCERNÉE</label>
-            <select 
-              value={station} 
-              onChange={(e) => setStation(e.target.value)} 
+            <select
+              value={station}
+              onChange={(e) => setStation(e.target.value)}
               className="sig-select"
             >
               <option value="">Sélectionner une station...</option>
-              {allStations.map(s => <option key={s} value={s}>{s}</option>)}
+              {allStations.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="input-group-sig">
             <label>TYPE D'INCIDENT</label>
             <div className="type-grid-modern">
-              <button 
-                type="button" 
-                className={`type-item-modern ${type === 'Police' ? 'active-police' : ''}`}
-                onClick={() => setType('Police')}
+              <button
+                type="button"
+                className={`type-item-modern ${type === "Police" ? "active-police" : ""}`}
+                onClick={() => setType("Police")}
               >
                 <span className="material-icons">shield</span>
                 <p>Contrôle</p>
               </button>
 
-              <button 
-                type="button" 
-                className={`type-item-modern ${type === 'Retard' ? 'active-delay' : ''}`}
-                onClick={() => setType('Retard')}
+              <button
+                type="button"
+                className={`type-item-modern ${type === "Retard" ? "active-delay" : ""}`}
+                onClick={() => setType("Retard")}
               >
                 <span className="material-icons">history</span>
                 <p>Retard</p>
               </button>
 
-              <button 
-                type="button" 
-                className={`type-item-modern ${type === 'Panne' ? 'active-issue' : ''}`}
-                onClick={() => setType('Panne')}
+              <button
+                type="button"
+                className={`type-item-modern ${type === "Panne" ? "active-issue" : ""}`}
+                onClick={() => setType("Panne")}
               >
                 <span className="material-icons">warning</span>
                 <p>Panne</p>
@@ -86,7 +107,7 @@ const Signalement = () => {
 
           <div className="input-group-sig">
             <label>PRÉCISIONS (OPTIONNEL)</label>
-            <textarea 
+            <textarea
               className="sig-textarea-modern"
               placeholder="Ex: Sortie Berri, agents visibles..."
               value={description}
@@ -95,8 +116,14 @@ const Signalement = () => {
             />
           </div>
 
-          <button type="submit" className="submit-sig-btn-modern" disabled={isSubmitting}>
-            {isSubmitting ? "Envoi en cours..." : "Diffuser le signalement (30 min)"}
+          <button
+            type="submit"
+            className="submit-sig-btn-modern"
+            disabled={isSubmitting}
+          >
+            {isSubmitting
+              ? "Envoi en cours..."
+              : "Diffuser le signalement (30 min)"}
           </button>
         </form>
       </div>
