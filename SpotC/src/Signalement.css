@@ -1,62 +1,144 @@
+/* Fond flouté derrière la carte */
 .sig-modal-overlay {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex; align-items: flex-end;
-  z-index: 2000;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
 }
 
+/* Carte de signalement */
 .sig-card-compact {
-  width: 100%;
-  background: #1a1a1a;
-  border-radius: 20px 20px 0 0;
-  padding: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: #161616;
+  width: 90%;
+  max-width: 500px;
+  padding: 25px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
 }
 
 .sig-header {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.sig-header h3 {
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+}
+
+.close-x-btn {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+/* Champs de saisie */
+.input-group-sig {
   margin-bottom: 20px;
 }
 
-.sig-header h3 { font-size: 16px; font-weight: 700; color: white; }
-
-.close-btn { background: none; border: none; color: #777; font-size: 24px; cursor: pointer; }
-
-/* Grille de types */
-.type-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-  margin-bottom: 20px;
+.input-group-sig label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #444;
+  letter-spacing: 1.5px;
+  margin-bottom: 10px;
 }
 
-.type-item {
-  background: #252525; border: 1px solid #333; border-radius: 12px;
-  padding: 12px; color: #888; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 5px;
-  transition: all 0.2s ease;
+.sig-select, .sig-textarea-modern {
+  width: 100%;
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 12px 15px;
+  color: #eee;
+  font-size: 14px;
+  font-family: inherit;
 }
 
-.type-item span { font-size: 24px; }
-.type-item p { font-size: 11px; font-weight: 600; margin: 0; }
+.sig-textarea-modern {
+  height: 80px;
+  resize: none;
+}
 
-/* Couleurs actives */
+/* Grille horizontale pour les boutons d'incidents */
+.type-grid-modern {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.type-item-modern {
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 14px;
+  padding: 15px 5px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #555;
+  transition: all 0.3s ease;
+}
+
+.type-item-modern .material-icons {
+  font-size: 24px;
+}
+
+.type-item-modern p {
+  font-size: 11px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Couleurs actives lors de la sélection */
 .active-police { border-color: #3b82f6; color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
 .active-delay { border-color: #f97316; color: #f97316; background: rgba(249, 115, 22, 0.1); }
 .active-issue { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.1); }
 
-/* Formulaire */
-.input-group-sig { margin-bottom: 20px; text-align: left; }
-.input-group-sig label { font-size: 11px; color: #666; text-transform: uppercase; margin-bottom: 8px; display: block; }
-
-.input-group-sig textarea {
-  width: 100%; background: #222; border: 1px solid #333; border-radius: 10px;
-  padding: 10px; color: white; font-family: inherit; resize: none; height: 60px;
+/* Bouton principal */
+.submit-sig-btn-modern {
+  width: 100%;
+  padding: 15px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 10px;
 }
 
-.submit-sig-btn {
-  width: 100%; padding: 14px; background: #3b82f6; color: white;
-  border: none; border-radius: 12px; font-weight: 700; cursor: pointer;
-  transition: opacity 0.2s;
+.submit-sig-btn-modern:hover:not(:disabled) {
+  background: #2563eb;
 }
 
-.submit-sig-btn:disabled { opacity: 0.5; }
+.submit-sig-btn-modern:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Animation d'apparition */
+.slide-up {
+  animation: slideUpEffect 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpEffect {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
