@@ -6,30 +6,17 @@ import { app } from "./firebase";
 const Bus = () => {
   const [search, setSearch] = useState("");
   const [liveData, setLiveData] = useState({});
-  const [busPositions, setBusPositions] = useState([]); // NEW: State for GPS locations
   const [loadingLive, setLoadingLive] = useState(true);
 
   useEffect(() => {
     const fetchLiveBusData = async () => {
       try {
         const functions = getFunctions(app);
-
-        // Setup both backend calls
         const getTransitUpdates = httpsCallable(functions, "getTransitUpdates");
-        const getVehiclePositions = httpsCallable(
-          functions,
-          "getVehiclePositions",
-        ); // NEW
+        const result = await getTransitUpdates();
 
-        // Run both fetches at the same time for better speed
-        const [updatesResult, positionsResult] = await Promise.all([
-          getTransitUpdates(),
-          getVehiclePositions(),
-        ]);
-
-        // 1. Process Status Data (Active/Canceled)
         const routeStatus = {};
-        updatesResult.data.data.forEach((entity) => {
+        result.data.data.forEach((entity) => {
           const routeId = entity.tripUpdate?.trip?.routeId;
           const isCanceled =
             entity.tripUpdate?.trip?.scheduleRelationship === 3;
@@ -41,11 +28,6 @@ const Bus = () => {
           }
         });
         setLiveData(routeStatus);
-
-        // 2. Process GPS Locations (Ready for the map!)
-        const locations = positionsResult.data.data;
-        console.log("GPS Locations Ready for Map:", locations);
-        setBusPositions(locations);
       } catch (error) {
         console.error("Error fetching live data:", error);
       } finally {
@@ -60,134 +42,133 @@ const Bus = () => {
 
   const styles = {
     container: {
-      padding: "20px",
-      backgroundColor: "#121212",
-      minHeight: "100vh",
-      color: "#ffffff",
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      display: "flex",
+      flexDirection: "column",
+      height: "100vh",
+      backgroundColor: "#000",
+      color: "#fff",
+      fontFamily: "system-ui, -apple-system, sans-serif",
     },
-    header: {
-      marginBottom: "30px",
-      borderBottom: "1px solid #333",
-      paddingBottom: "10px",
+    topSection: { padding: "20px 20px 10px 20px", zIndex: 10 },
+    headerRow: {
       display: "flex",
       justifyContent: "space-between",
-      alignItems: "center",
+      alignItems: "flex-end",
+      marginBottom: "20px",
     },
+    title: { margin: 0, fontSize: "28px", fontWeight: "800" },
+    subtitle: { margin: "5px 0 0 0", color: "#888", fontSize: "14px" },
     liveIndicator: {
-      fontSize: "14px",
+      fontSize: "12px",
       display: "flex",
       alignItems: "center",
-      gap: "8px",
-      backgroundColor: loadingLive ? "#333" : "#064e3b",
-      color: loadingLive ? "#aaa" : "#34d399",
+      gap: "6px",
+      backgroundColor: loadingLive ? "#222" : "rgba(74, 222, 128, 0.15)",
+      color: loadingLive ? "#888" : "#4ade80",
       padding: "6px 12px",
       borderRadius: "20px",
-      fontWeight: "500",
+      fontWeight: "700",
+    },
+    searchBarWrapper: { position: "relative", marginBottom: "10px" },
+    searchIcon: {
+      position: "absolute",
+      left: "15px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      color: "#888",
+      fontSize: "20px",
     },
     searchBar: {
       width: "100%",
-      padding: "15px",
-      borderRadius: "12px",
-      border: "1px solid #444",
+      padding: "16px 16px 16px 45px",
+      borderRadius: "25px",
+      border: "none",
       backgroundColor: "#1e1e1e",
       color: "#fff",
       fontSize: "16px",
       outline: "none",
-      transition: "border 0.3s ease",
       boxSizing: "border-box",
+      boxShadow: "0 4px 6px rgba(0,0,0,0.3)",
     },
-    categorySection: {
-      marginTop: "25px",
+    listContainer: {
+      flex: 1,
+      overflowY: "auto",
+      padding: "10px 0 40px 0",
+      backgroundColor: "#121212",
+      borderTopLeftRadius: "25px",
+      borderTopRightRadius: "25px",
+      marginTop: "10px",
+      boxShadow: "0 -4px 15px rgba(0,0,0,0.5)",
     },
     categoryTitle: {
-      fontSize: "20px",
-      fontWeight: "600",
-      marginBottom: "15px",
+      padding: "15px 20px 5px 20px",
+      fontSize: "14px",
+      fontWeight: "700",
+      color: "#888",
+      textTransform: "uppercase",
+      letterSpacing: "1px",
+      position: "sticky",
+      top: 0,
+      backgroundColor: "#121212",
+      zIndex: 5,
+    },
+    busRow: {
       display: "flex",
       alignItems: "center",
-      gap: "10px",
-    },
-    grid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-      gap: "15px",
-    },
-    busCard: {
-      backgroundColor: "#1e1e1e",
-      borderRadius: "10px",
-      padding: "15px",
-      display: "flex",
-      flexDirection: "column",
-      gap: "12px",
-      border: "1px solid #2a2a2a",
-      transition: "transform 0.2s, border-color 0.2s",
+      padding: "16px 20px",
+      borderBottom: "1px solid #222",
       cursor: "pointer",
+      transition: "background-color 0.2s",
     },
-    busHeader: {
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-    },
-    busNumber: (color) => ({
+    busBadge: (color) => ({
       backgroundColor: color,
       color: "#fff",
-      padding: "5px 10px",
-      borderRadius: "6px",
-      fontWeight: "bold",
-      minWidth: "45px",
-      textAlign: "center",
-    }),
-    busName: {
-      fontSize: "15px",
-      fontWeight: "500",
-      color: "#e0e0e0",
-      flex: 1,
-    },
-    bottomRow: {
+      width: "55px",
+      height: "40px",
+      borderRadius: "8px",
       display: "flex",
-      justifyContent: "space-between",
+      justifyContent: "center",
       alignItems: "center",
-      borderTop: "1px solid #333",
-      paddingTop: "8px",
-    },
-    directionRow: {
+      fontSize: "20px",
+      fontWeight: "800",
+      marginRight: "15px",
+      flexShrink: 0,
+    }),
+    busInfo: {
+      flex: 1,
       display: "flex",
-      gap: "6px",
-      flexWrap: "wrap",
+      flexDirection: "column",
+      justifyContent: "center",
     },
+    busName: {
+      fontSize: "17px",
+      fontWeight: "700",
+      marginBottom: "4px",
+      color: "#fff",
+    },
+    directionRow: { display: "flex", gap: "6px", flexWrap: "wrap" },
     directionTag: {
-      fontSize: "10px",
-      backgroundColor: "#333",
-      padding: "3px 6px",
-      borderRadius: "4px",
-      color: "#bbb",
-      textTransform: "uppercase",
+      fontSize: "11px",
+      backgroundColor: "#2a2a2a",
+      padding: "3px 8px",
+      borderRadius: "12px",
+      color: "#aaa",
+      fontWeight: "600",
     },
-    statusBadge: (statusType) => {
-      let bgColor = "#333";
-      let textColor = "#aaa";
-
-      if (statusType === "active") {
-        bgColor = "rgba(16, 185, 129, 0.15)";
-        textColor = "#34d399";
-      } else if (statusType === "warning") {
-        bgColor = "rgba(239, 68, 68, 0.15)";
-        textColor = "#f87171";
-      }
-
-      return {
-        fontSize: "11px",
-        fontWeight: "bold",
-        padding: "4px 8px",
-        borderRadius: "6px",
-        backgroundColor: bgColor,
-        color: textColor,
-        display: "flex",
-        alignItems: "center",
-        gap: "4px",
-      };
-    },
+    statusBadge: (statusType) => ({
+      fontSize: "12px",
+      fontWeight: "700",
+      padding: "4px 8px",
+      borderRadius: "6px",
+      backgroundColor:
+        statusType === "active"
+          ? "rgba(74, 222, 128, 0.15)"
+          : "rgba(239, 68, 68, 0.15)",
+      color: statusType === "active" ? "#4ade80" : "#f87171",
+      display: "flex",
+      alignItems: "center",
+      gap: "4px",
+    }),
   };
 
   const renderCategories = () => {
@@ -210,21 +191,10 @@ const Bus = () => {
       const color = getCategoryColor(category);
 
       return (
-        <div key={category} style={styles.categorySection}>
-          <h2 style={{ ...styles.categoryTitle, color: color }}>
-            <span
-              style={{
-                width: "4px",
-                height: "24px",
-                backgroundColor: color,
-                borderRadius: "2px",
-              }}
-            ></span>
-            {category}
-          </h2>
-          <div style={styles.grid}>
+        <div key={category}>
+          <div style={styles.categoryTitle}>{category}</div>
+          <div>
             {filteredLines.map((bus) => {
-              // Get live status for this specific bus ID
               const status = liveData[bus.id];
               let statusType = "none";
               if (status) {
@@ -235,22 +205,18 @@ const Bus = () => {
               return (
                 <div
                   key={bus.id}
-                  style={styles.busCard}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = color;
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "#2a2a2a";
-                    e.currentTarget.style.transform = "translateY(0)";
-                  }}
+                  style={styles.busRow}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#1e1e1e")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "transparent")
+                  }
                 >
-                  <div style={styles.busHeader}>
-                    <div style={styles.busNumber(color)}>{bus.id}</div>
-                    <div style={styles.busName}>{bus.name}</div>
-                  </div>
+                  <div style={styles.busBadge(color)}>{bus.id}</div>
 
-                  <div style={styles.bottomRow}>
+                  <div style={styles.busInfo}>
+                    <div style={styles.busName}>{bus.name}</div>
                     <div style={styles.directionRow}>
                       {bus.dir.map((d, i) => (
                         <span key={i} style={styles.directionTag}>
@@ -258,18 +224,15 @@ const Bus = () => {
                         </span>
                       ))}
                     </div>
-
-                    {/* LIVE STATUS BADGE */}
-                    {!loadingLive && (
-                      <div style={styles.statusBadge(statusType)}>
-                        {statusType === "warning" &&
-                          `⚠️ ${status.canceled} Canceled`}
-                        {statusType === "active" &&
-                          `📡 ${status.active} Active`}
-                        {statusType === "none" && `⚪ No data`}
-                      </div>
-                    )}
                   </div>
+
+                  {!loadingLive && statusType !== "none" && (
+                    <div style={styles.statusBadge(statusType)}>
+                      {statusType === "warning"
+                        ? `⚠️ ${status.canceled}`
+                        : `📡 ${status.active}`}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -281,30 +244,32 @@ const Bus = () => {
 
   return (
     <div style={styles.container}>
-      <header style={styles.header}>
-        <div>
-          <h1>Réseau de Bus STM</h1>
-          <p style={{ color: "#888", fontSize: "14px", marginTop: "5px" }}>
-            Explorez les {Object.values(stmBusData).flat().length} lignes de
-            Montréal
-          </p>
+      <div style={styles.topSection}>
+        <div style={styles.headerRow}>
+          <div>
+            <h1 style={styles.title}>Réseau Bus</h1>
+            <p style={styles.subtitle}>Toutes les lignes STM</p>
+          </div>
+          <div style={styles.liveIndicator}>
+            {loadingLive ? "⏳ Connexion..." : "🟢 En direct"}
+          </div>
         </div>
 
-        {/* Top Right Live Indicator */}
-        <div style={styles.liveIndicator}>
-          {loadingLive ? "⏳ Connexion STM..." : "🟢 Temps Réel Actif"}
+        <div style={styles.searchBarWrapper}>
+          <span className="material-icons" style={styles.searchIcon}>
+            search
+          </span>
+          <input
+            type="text"
+            placeholder="Rechercher une ligne..."
+            style={styles.searchBar}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-      </header>
+      </div>
 
-      <input
-        type="text"
-        placeholder="Rechercher par numéro ou nom de rue..."
-        style={styles.searchBar}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-
-      <div style={{ paddingBottom: "40px" }}>{renderCategories()}</div>
+      <div style={styles.listContainer}>{renderCategories()}</div>
     </div>
   );
 };
